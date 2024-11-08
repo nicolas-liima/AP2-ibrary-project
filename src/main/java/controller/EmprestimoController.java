@@ -42,7 +42,7 @@ public class EmprestimoController {
             logger.info("Recebendo requisição para realizar empréstimo: ISBN={}, Username={}", isbn, username);
             int novoEmprestimoID = emprestimoService.realizarEmprestimo(isbn, username);
             logger.info("Empréstimo realizado com sucesso. ID do Empréstimo: {}", novoEmprestimoID);
-            return ResponseEntity.ok(novoEmprestimoID);
+            return ResponseEntity.ok("Emprestimo realizado com o Id:"+ novoEmprestimoID);
         } catch (ObjetoDuplicadoException e) {
             logger.warn("Falha ao realizar empréstimo: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());

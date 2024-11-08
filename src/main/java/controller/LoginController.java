@@ -10,7 +10,7 @@ import exceptions.AutenticacaoException;
 import exceptions.RecursoNaoEncontradoException;
 
 @RestController
-@RequestMapping("/api/login")
+@RequestMapping("/login")
 public class LoginController {
 
     private final LoginService loginService;
@@ -28,7 +28,7 @@ public class LoginController {
         } catch (RecursoNaoEncontradoException e) {
             return ResponseEntity.status(404).body("Usuário não encontrado: " + e.getMessage());
         } catch (AutenticacaoException e) {
-            return ResponseEntity.status(401).body("Credenciais inválidas: " + e.getMessage());
+            return ResponseEntity.status(401).body("Credenciais inválidas ou Usuário inativo: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
         }

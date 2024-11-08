@@ -11,23 +11,28 @@ import script.DataRetriever;
 @Service
 public class LoginService {
 
-    private final DataRetriever dataRetriever;
     private final UsuarioService usuarioService;
 
     @Autowired
-    public LoginService(DataRetriever dataRetriever, UsuarioService usuarioService) {
-        this.dataRetriever = dataRetriever;
+    public LoginService(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
 
     public Usuario login(String username, String senha) throws RecursoNaoEncontradoException, AutenticacaoException {
-        Usuario usuario = usuarioService.buscarUsuarioPorUsername(username); 
+        Usuario usuario = usuarioService.buscarUsuarioPorUsername(username);
+        
         if (usuario == null) {
             throw new RecursoNaoEncontradoException("Usuário não encontrado: " + username);
         }
-        if (!usuario.validarSenha(senha)) {
-            throw new AutenticacaoException("Credenciais inválidas para o usuário: " + username);
+        
+        if (!usuario.isUsuarioAtivo()) {
+            throw new AutenticacaoException(username);
         }
+
+        if (!usuario.validarSenha(senha)) {
+            throw new AutenticacaoException(username);
+        }
+        
         return usuario;
     }
 }
