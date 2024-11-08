@@ -57,10 +57,10 @@ public class UsuarioController {
     }
 
     @GetMapping("/cpf/{cpf}")
-    public ResponseEntity<Usuario> buscarUsuarioPorCpf(@PathVariable String cpf) {
+    public ResponseEntity<List<Usuario>> buscarUsuarioPorCpf(@PathVariable String cpf) {
         try {
-            Usuario usuario = usuarioService.buscarUsuarioPorCpf(cpf);
-            return ResponseEntity.ok(usuario);
+        	List<Usuario> usuarios = usuarioService.buscarUsuarioPorCpf(cpf);
+            return ResponseEntity.ok(usuarios);
         } catch (RecursoNaoEncontradoException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
@@ -80,17 +80,29 @@ public class UsuarioController {
         }
     }
 
-    @PutMapping
-    public ResponseEntity<String> atualizarUsuario(@RequestBody Usuario usuario) {
+    @PutMapping("/{username}")
+    public ResponseEntity<String> atualizarUsuario(@PathVariable String username, @RequestBody Usuario usuario) {
         try {
-            usuarioService.atualizarUsuario(usuario);
-            return ResponseEntity.ok("Usuário atualizado com sucesso.");
+            // Verifica se o novo username é válido
+            boolean usuarioAtualizado = usuarioService.atualizarUsuario(username, usuario);
+
+            if (usuarioAtualizado) {
+                return ResponseEntity.ok("Usuário atualizado com sucesso.");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado.");
+            }
         } catch (RecursoNaoEncontradoException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (ObjetoDuplicadoException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao atualizar usuário.");
         }
     }
+
+
+
+
 
 
     @DeleteMapping("/{username}")

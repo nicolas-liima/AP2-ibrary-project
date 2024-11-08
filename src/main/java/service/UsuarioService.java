@@ -38,16 +38,20 @@ public class UsuarioService {
     }
 
     public Usuario buscarUsuarioPorUsername(String username) {
+    	 logger.info("Buscando  Username: {}", username);
         Usuario usuario = dataRetriever.buscarUsuarioPorUsername(username);
         if (usuario == null) {
+            logger.info("Não encontrado Username: {}", username);
             throw new RecursoNaoEncontradoException("Usuário não encontrado: " + username);
         }
+        logger.info("Resultado de buscarUsuarioPorUsername no UsuarioService: {}", usuario);
+
         return usuario;
     }
 
-    public Usuario buscarUsuarioPorCpf(String cpf) {
-        Usuario usuario = dataRetriever.buscarUsuarioPorCpf(cpf);
-        if (usuario == null) {
+    public List<Usuario> buscarUsuarioPorCpf(String cpf) {
+    	List<Usuario> usuario = dataRetriever.buscarUsuarioPorCpf(cpf);
+        if (usuario.isEmpty()) {
             throw new RecursoNaoEncontradoException("Usuário não encontrado com CPF: " + cpf);
         }
         return usuario;
@@ -67,9 +71,29 @@ public class UsuarioService {
         return dataInserter.inserirUsuario(usuario);
     }
 
-    public boolean atualizarUsuario(Usuario usuario) {
-        return dataInserter.atualizarUsuario(usuario);
+    public boolean atualizarUsuario(String username, Usuario usuarioAtualizado) {
+        // Busca o usuário existente com o username antigo
+        Usuario usuarioExistente = dataRetriever.buscarUsuarioPorUsername(username);
+        if (usuarioExistente == null) {
+            throw new RecursoNaoEncontradoException("Usuário não encontrado.");
+        }
+
+        // Verifica se o novo username é diferente do atual e se já existe no banco
+        if (!usuarioExistente.getUsername().equals(usuarioAtualizado.getUsername())
+                && usuarioExisteComUsername(usuarioAtualizado.getUsername())) {
+            throw new ObjetoDuplicadoException("Username já está em uso.");
+        }
+
+        // Atualiza o usuário no banco
+        return dataInserter.atualizarUsuario(username, usuarioAtualizado);
     }
+
+    
+    public boolean usuarioExisteComUsername(String username) {
+        return dataRetriever.buscarUsuarioPorUsername(username) != null;
+    }
+
+
 
     public boolean removerUsuario(String username) {
         Usuario usuario = buscarUsuarioPorUsername(username);

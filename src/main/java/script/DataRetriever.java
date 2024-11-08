@@ -103,16 +103,16 @@ public class DataRetriever {
 
 	private Usuario criarUsuario(ResultSet rs) throws SQLException {
 	    int id = rs.getInt("id");
-	    String nome = rs.getString("nome");
-	    String senha = rs.getString("senha");
-	    String cpf = rs.getString("cpf");
 	    String username = rs.getString("username");
-	    String endereco = rs.getString("endereco"); // Agora essas informações serão parte do Usuario
-	    String telefone = rs.getString("telefone");
-	    String email = rs.getString("email");
+	    String senha = rs.getString("senha");
 	    int tipoUsuario = rs.getInt("tipoUsuario");
 	    boolean usuarioAtivo = rs.getBoolean("usuarioAtivo");
-
+	    String nome = rs.getString("nome");	    
+	    String cpf = rs.getString("cpf");
+	    String email = rs.getString("email");    
+	    String endereco = rs.getString("endereco"); // Agora essas informações serão parte do Usuario
+	    String telefone = rs.getString("telefone");
+	    
 	    // Verifica se o tipo de usuário está dentro do intervalo do enum
 	    if (tipoUsuario < 1 || tipoUsuario > Usuario.TipoUsuario.values().length) {
 	        throw new SQLException("Tipo de usuário inválido: " + tipoUsuario);
@@ -226,23 +226,29 @@ public class DataRetriever {
 	    return usuario; // Retorna o usuário encontrado ou nulo se não encontrado
 	}
 	
-private List<Usuario> buscarPorFiltroUsuarioAtivo(String username, String senha) {
+	private List<Usuario> buscarPorFiltroUsuarioAtivo(String username, String senha) {
 	    String sql = "SELECT * FROM Usuarios WHERE username = ? AND senha = ? AND ativo = 1"; // Ajuste conforme sua tabela
 	    return buscarPorFiltro(Usuario.class, sql, new Object[]{username, senha});
 	}
 
 
-	public Usuario buscarUsuarioPorCpf(String cpf) {
-		String sql = "SELECT * FROM Usuario WHERE cpf = ?";
-		List<Usuario> usuario = buscarPorFiltro(Usuario.class, sql, cpf);
-		return usuario.isEmpty() ? null : usuario.get(0); // Retorna o primeiro usuário ou null se não houver
+	public List<Usuario> buscarUsuarioPorCpf(String cpf) {
+		String sql = "SELECT * FROM Usuario WHERE cpf LIKE ?";
+		List<Usuario> usuario = buscarPorFiltro(Usuario.class, sql, cpf + "%");
+		return usuario; // Retorna a lista de reservas (pode ser vazia) 
+	}
+
+	public Usuario buscarUsuarioPorId(int id) {
+	    String sql = "SELECT * FROM Usuario WHERE id = ?";
+	    List<Usuario> livros = buscarPorFiltro(Usuario.class, sql, id);
+	    return livros.isEmpty() ? null : livros.get(0); // Retorna o primeiro usuario ou null se não houver
 	}
 
 	public List<Reserva> buscarReservasPorUsername(String username) {
-		String sql = "SELECT r.id AS reserva_id, r.livro_id, r.cliente_id, r.dataReserva, r.dataExpiracao, "
+		String sql = "SELECT r.id AS reserva_id, r.livro_id, r.usuario_id, r.dataReserva, r.dataExpiracao, "
 				+ "l.titulo, l.autor, l.categoria, l.quantidadeEstoque, l.isbn, "
-				+ "u.nome AS cliente_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
-				+ "FROM Reserva r " + "JOIN Livro l ON r.livro_id = l.id " + "JOIN Usuario u ON r.cliente_id = u.id "
+				+ "u.nome AS usuario_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
+				+ "FROM Reserva r " + "JOIN Livro l ON r.livro_id = l.id " + "JOIN Usuario u ON r.usuario_id = u.id "
 				+ "WHERE u.username = ?";
 
 		List<Reserva> reservas = buscarPorFiltro(Reserva.class, sql, username); // Passa o CPF diretamente
@@ -251,10 +257,10 @@ private List<Usuario> buscarPorFiltroUsuarioAtivo(String username, String senha)
 
 
 	public Reserva buscarReservaPorId(int id) {
-		String sql = "SELECT r.id AS reserva_id, r.livro_id, r.cliente_id, r.dataReserva, r.dataExpiracao, "
+		String sql = "SELECT r.id AS reserva_id, r.livro_id, r.usuario_id, r.dataReserva, r.dataExpiracao, "
 				+ "l.titulo, l.autor, l.categoria, l.quantidadeEstoque, l.isbn, "
-				+ "u.nome AS cliente_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
-				+ "FROM Reserva r " + "JOIN Livro l ON r.livro_id = l.id " + "JOIN Usuario u ON r.cliente_id = u.id "
+				+ "u.nome AS usuario_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
+				+ "FROM Reserva r " + "JOIN Livro l ON r.livro_id = l.id " + "JOIN Usuario u ON r.usuario_id = u.id "
 				+ "WHERE r.id = ?";
 
 		List<Reserva> reserva = buscarPorFiltro(Reserva.class, sql, id);
@@ -262,10 +268,10 @@ private List<Usuario> buscarPorFiltroUsuarioAtivo(String username, String senha)
 	}
 
 	public List<Emprestimo> buscarEmprestimosPorUsername(String username) {
-		String sql = "SELECT e.id AS emprestimo_id, e.livro_id, e.cliente_id, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, "
+		String sql = "SELECT e.id AS emprestimo_id, e.livro_id, e.usuario_id, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, "
 				+ "l.titulo, l.autor, l.categoria, l.quantidadeEstoque, l.isbn, "
-				+ "u.nome AS cliente_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
-				+ "FROM Emprestimo e " + "JOIN Livro l ON e.livro_id = l.id " + "JOIN Usuario u ON e.cliente_id = u.id "
+				+ "u.nome AS usuario_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
+				+ "FROM Emprestimo e " + "JOIN Livro l ON e.livro_id = l.id " + "JOIN Usuario u ON e.usuario_id = u.id "
 				+ "WHERE u.username = ?";
 
 		List<Emprestimo> emprestimos = buscarPorFiltro(Emprestimo.class, sql, username);
@@ -279,35 +285,31 @@ private List<Usuario> buscarPorFiltroUsuarioAtivo(String username, String senha)
 	}
 
 	public Emprestimo buscarEmprestimoPorId(int id) {
-		String sql = "SELECT e.id AS emprestimo_id, e.livro_id, e.cliente_id, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, "
-				+ "l.titulo, l.autor, l.categoria, l.quantidadeEstoque, l.isbn, "
-				+ "u.nome AS cliente_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
-				+ "FROM Emprestimo e " + "JOIN Livro l ON e.livro_id = l.id " + "JOIN Usuario u ON e.cliente_id = u.id "
-				+ "WHERE e.id = ?";
-
-		List<Emprestimo> emprestimos = buscarPorFiltro(Emprestimo.class, sql, id);
-		return emprestimos.isEmpty() ? null : emprestimos.get(0); // Retorna o primeiro resultado ou null se não houver
+	    String sql = "SELECT * FROM Emprestimo WHERE id = ?";
+	    List<Emprestimo> emprestimos = buscarPorFiltro(Emprestimo.class, sql, id);
+	    return emprestimos.isEmpty() ? null : emprestimos.get(0); // Retorna o primeiro empréstimo ou null se não houver
 	}
 
+
 public List<Emprestimo> listarEmprestimosAtivos() {
-    String sql = "SELECT e.id AS emprestimo_id, e.livro_id, e.cliente_id, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, "
+    String sql = "SELECT e.id AS emprestimo_id, e.livro_id, e.usuario_id, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, "
             + "l.titulo, l.autor, l.categoria, l.quantidadeEstoque, l.isbn, "
-            + "u.nome AS cliente_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
+            + "u.nome AS usuario_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
             + "FROM Emprestimo e "
             + "JOIN Livro l ON e.livro_id = l.id "
-            + "JOIN Usuario u ON e.cliente_id = u.id "
+            + "JOIN Usuario u ON e.usuario_id = u.id "
             + "WHERE e.dataDevolucaoEfetiva IS NULL"; // Filtra empréstimos ativos
 
     return buscarPorFiltro(Emprestimo.class, sql, null); // Chama o método genérico
 }
 
 public List<Emprestimo> listarEmprestimosAtivosPorLivro(int livroId) {
-    String sql = "SELECT e.id AS emprestimo_id, e.livro_id, e.cliente_id, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, "
+    String sql = "SELECT e.id AS emprestimo_id, e.livro_id, e.usuario_id, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, "
             + "l.titulo, l.autor, l.categoria, l.quantidadeEstoque, l.isbn, "
-            + "u.nome AS cliente_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
+            + "u.nome AS usuario_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
             + "FROM Emprestimo e "
             + "JOIN Livro l ON e.livro_id = l.id "
-            + "JOIN Usuario u ON e.cliente_id = u.id "
+            + "JOIN Usuario u ON e.usuario_id = u.id "
             + "WHERE e.dataDevolucaoEfetiva IS NULL AND e.livro_id = ?"; // Filtra empréstimos ativos pelo ID do livro
 
     // Chama o método genérico que busca por filtros, passando o ID do livro como parâmetro
@@ -315,12 +317,12 @@ public List<Emprestimo> listarEmprestimosAtivosPorLivro(int livroId) {
 }
 
 public List<Emprestimo> listarEmprestimosFinalizados() {
-    String sql = "SELECT e.id AS emprestimo_id, e.livro_id, e.cliente_id, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, "
+    String sql = "SELECT e.id AS emprestimo_id, e.livro_id, e.usuario_id, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, "
             + "l.titulo, l.autor, l.categoria, l.quantidadeEstoque, l.isbn, "
             + "u.nome AS cliente_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
             + "FROM Emprestimo e "
             + "JOIN Livro l ON e.livro_id = l.id "
-            + "JOIN Usuario u ON e.cliente_id = u.id "
+            + "JOIN Usuario u ON e.usuario_id = u.id "
             + "WHERE e.dataDevolucaoEfetiva IS NOT NULL"; // Filtra empréstimos finalizados
 
     return buscarPorFiltro(Emprestimo.class, sql, null); // Chama o método genérico

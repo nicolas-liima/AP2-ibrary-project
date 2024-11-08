@@ -9,18 +9,26 @@ public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+    
+    @Column(unique = true, nullable = false)
+    private String username;
 
-    @Column(nullable = false, length = 100) // Adicionando restrições para o nome
-    private String nome;
 
     @Column(nullable = false) // Adicionando restrições para a senha
     private String senha;
+    
+    @Enumerated(EnumType.STRING)  // Use STRING para garantir que o valor seja convertido corretamente para o nome da enum
+    @Column(name = "tipoUsuario") 
+    private TipoUsuario tipoUsuario;
+    
+    @Column
+    protected boolean usuarioAtivo;
+    
+    @Column(nullable = false, length = 100) // Adicionando restrições para o nome
+    private String nome;
 
     @Column(nullable = false)
     private String cpf;
-
-    @Column(unique = true, nullable = false)
-    private String username;
 
     @Column(nullable = false, unique = true, length = 100)
     private String email;
@@ -31,17 +39,15 @@ public class Usuario {
     @Column(nullable = true, length = 15)
     private String telefone;
     
-    @Enumerated(EnumType.STRING)
-    @Column(name = "tipoUsuario") // Nome da coluna correspondente no banco de dados
-    private TipoUsuario tipoUsuario;
     
-    @Column
-    protected boolean usuarioAtivo;
+
 
     public enum TipoUsuario {
         CLIENTE,
-        FUNCIONARIO
-    }
+        FUNCIONARIO;
+
+		}
+    
 
     // Construtor completo com ID
     public Usuario(int id, String username, String senha,TipoUsuario tipoUsuario, boolean usuarioAtivo, String nome, String cpf, String email, String endereco, String telefone) {
@@ -61,6 +67,16 @@ public class Usuario {
     public Usuario(String username, String senha,TipoUsuario tipoUsuario, boolean usuarioAtivo, String nome, String cpf, String email, String endereco, String telefone) {
         this.username = username;
         this.senha = senha;
+        this.tipoUsuario = tipoUsuario;
+        this.usuarioAtivo = usuarioAtivo;
+        this.nome = nome;
+        this.cpf = cpf;
+        this.email = email;
+        this.endereco = endereco;
+        this.telefone = telefone;
+    }
+    public Usuario(String username,TipoUsuario tipoUsuario, boolean usuarioAtivo, String nome, String cpf, String email, String endereco, String telefone) {
+        this.username = username;
         this.tipoUsuario = tipoUsuario;
         this.usuarioAtivo = usuarioAtivo;
         this.nome = nome;

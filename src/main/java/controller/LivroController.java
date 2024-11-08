@@ -5,11 +5,19 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import exceptions.ObjetoDuplicadoException;
+import exceptions.RecursoNaoEncontradoException;
 import model.Livro;
 import service.LivroService;
-import exceptions.RecursoNaoEncontradoException;
 
 @RestController
 @RequestMapping("/livros")
@@ -70,15 +78,40 @@ public class LivroController {
 
     @PostMapping
     public ResponseEntity<String> salvarLivro(@RequestBody Livro livro) {
-        boolean sucesso = livroService.salvarLivro(livro);
-        return sucesso ? ResponseEntity.ok("Livro cadastrado com sucesso.") : ResponseEntity.badRequest().body("Erro ao cadastrar livro.");
+        try {
+            livroService.salvarLivro(livro);
+            return ResponseEntity.ok("Livro cadastrado com sucesso.");
+        } catch (ObjetoDuplicadoException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao salvar livro.");
+        }
     }
 
-    @PutMapping
-    public ResponseEntity<String> atualizarLivro(@RequestBody Livro livro) {
-        boolean sucesso = livroService.atualizarLivro(livro);
-        return sucesso ? ResponseEntity.ok("Livro atualizado com sucesso.") : ResponseEntity.badRequest().body("Erro ao atualizar livro.");
+
+    @PutMapping("/{isbn}")
+    public ResponseEntity<String> atualizarLivro(@PathVariable String isbn, @RequestBody Livro livroAtualizado) {
+        try {
+            // Chama o serviço para atualizar o livro com o ISBN fornecido
+            boolean livroAtualizadoComSucesso = livroService.atualizarLivro(isbn, livroAtualizado);
+
+            if (livroAtualizadoComSucesso) {
+                return ResponseEntity.ok("Livro atualizado com sucesso.");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Livro não encontrado.");
+            }
+        } catch (RecursoNaoEncontradoException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (ObjetoDuplicadoException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao atualizar livro.");
+        }
     }
+
+
 
     @DeleteMapping("/{isbn}")
     public ResponseEntity<String> removerLivro(@PathVariable String isbn) {

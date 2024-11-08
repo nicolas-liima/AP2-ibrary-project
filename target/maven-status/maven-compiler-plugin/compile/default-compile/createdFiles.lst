@@ -1,4 +1,5 @@
 model\Emprestimo.class
+exceptions\ResponseError.class
 exceptions\RecursoNaoEncontradoException.class
 model\Usuario.class
 controller\EmprestimoController.class

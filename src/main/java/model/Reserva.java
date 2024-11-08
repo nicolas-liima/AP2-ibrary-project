@@ -18,10 +18,11 @@ public class Reserva {
     @ManyToOne(optional = false)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
+    private boolean livroReservado;
 
     private LocalDate dataReserva;
     private LocalDate dataExpiracao;
-    private boolean livroReservado;
+
 
     // Construtor com ID, utilizado para consultas
     public Reserva(int id, Livro livro, Usuario usuario, boolean livroReservado, LocalDate dataReserva, LocalDate dataExpiracao) {

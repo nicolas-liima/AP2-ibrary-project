@@ -11,10 +11,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import jakarta.transaction.Transactional;
 import model.Emprestimo;
 import model.Livro;
 import model.Reserva;
 import model.Usuario;
+import model.Usuario.TipoUsuario;
 
 @Component
 public class DataInserter {
@@ -50,31 +52,33 @@ public class DataInserter {
 	}
 
 	// Método para atualizar um livro existente
-	public boolean atualizarLivro(Livro livro) {
-		String sql = "UPDATE Livro SET titulo = ?, autor = ?, categoria = ?, quantidadeEstoque = ? WHERE isbn = ?";
+	public boolean atualizarLivro(String isbnAntigo, Livro livroAtualizado) {
+	    String sql = "UPDATE Livro SET titulo = ?, autor = ?, categoria = ?, quantidadeEstoque = ?, isbn = ? WHERE isbn = ?";
 
-		try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	    try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-			pstmt.setString(1, livro.getTitulo());
-			pstmt.setString(2, livro.getAutor());
-			pstmt.setString(3, livro.getCategoria());
-			pstmt.setInt(4, livro.getQuantidadeEstoque());
-			pstmt.setString(5, livro.getIsbn());
+	        pstmt.setString(1, livroAtualizado.getTitulo());
+	        pstmt.setString(2, livroAtualizado.getAutor());
+	        pstmt.setString(3, livroAtualizado.getCategoria());
+	        pstmt.setInt(4, livroAtualizado.getQuantidadeEstoque());
+	        pstmt.setString(5, livroAtualizado.getIsbn());  // Novo ISBN do corpo
+	        pstmt.setString(6, isbnAntigo);                 // ISBN original da URL
 
-			int rowsUpdated = pstmt.executeUpdate();
-			if (rowsUpdated > 0) {
-				logger.info("Livro atualizado com sucesso: {}", livro.getTitulo());
-				return true;
-			} else {
-				logger.warn("Erro: Livro com ISBN {} não encontrado.", livro.getIsbn());
-				return false;
-			}
+	        int rowsUpdated = pstmt.executeUpdate();
+	        if (rowsUpdated > 0) {
+	            logger.info("Livro atualizado com sucesso: {}", livroAtualizado.getTitulo());
+	            return true;
+	        } else {
+	            logger.warn("Erro: Livro com ISBN {} não encontrado.", isbnAntigo);
+	            return false;
+	        }
 
-		} catch (SQLException e) {
-			logger.error("Erro ao atualizar livro: {}", e.getMessage(), e);
-			return false;
-		}
+	    } catch (SQLException e) {
+	        logger.error("Erro ao atualizar livro: {}", e.getMessage(), e);
+	        return false;
+	    }
 	}
+
 
 	// Método para remover um livro pelo ISBN
 	public boolean removerLivroPorIsbn(String isbn) {
@@ -126,33 +130,49 @@ public class DataInserter {
 		}
 	}
 
-	public boolean atualizarUsuario(Usuario usuario) {
-		String sql = "UPDATE Usuario SET nome = ?, senha = ?, endereco = ?, telefone = ?, email = ? WHERE id = ?";
+	@Transactional
+	public boolean atualizarUsuario(String username, Usuario usuario) {
+	    String sql = "UPDATE Usuario SET nome = ?, senha = ?, endereco = ?, telefone = ?, email = ?, tipoUsuario = ?, usuarioAtivo = ?, username = ? WHERE username = ?";
 
+	    try (Connection conn = databaseManager.getConnection(); 
+	         PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-		try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	        pstmt.setString(1, usuario.getNome());
+	        pstmt.setString(2, usuario.getSenha());
+	        pstmt.setString(3, usuario.getEndereco());
+	        pstmt.setString(4, usuario.getTelefone());
+	        pstmt.setString(5, usuario.getEmail());
 
-			pstmt.setString(1, usuario.getNome());
-			pstmt.setString(2, usuario.getSenha());
-			pstmt.setString(3, usuario.getEndereco());
-			pstmt.setString(4, usuario.getTelefone());
-			pstmt.setString(5, usuario.getEmail());
-			pstmt.setInt(6, usuario.getId());
+	        // Lógica para garantir que o valor de tipoUsuario seja o esperado pelo banco
+	        if (usuario.getTipoUsuario() == TipoUsuario.CLIENTE) {
+	            pstmt.setInt(6, 1); // CLIENTE = 1
+	        } else if (usuario.getTipoUsuario() == TipoUsuario.FUNCIONARIO) {
+	            pstmt.setInt(6, 2); // FUNCIONARIO = 2
+	        }
 
-			int rowsUpdated = pstmt.executeUpdate();
-			if (rowsUpdated > 0) {
-				logger.info("Usuário com ID {} atualizado com sucesso.", usuario.getId());
-				return true;
-			} else {
-				logger.warn("Nenhuma linha atualizada para o usuário com ID {}.", usuario.getId());
-				return false;
-			}
-		} catch (SQLException e) {
-			logger.error("Erro ao atualizar usuário com ID {}: {}", usuario.getId(), e.getMessage(), e);
-			return false;
-		}
+	        pstmt.setBoolean(7, usuario.isUsuarioAtivo());
+	        pstmt.setString(8, usuario.getUsername());
+	        pstmt.setString(9, username);
 
+	        int rowsUpdated = pstmt.executeUpdate();
+
+	        if (rowsUpdated > 0) {
+	            logger.info("Usuário com Username {} atualizado com sucesso.", usuario.getUsername());
+	            return true;
+	        } else {
+	            logger.warn("Nenhuma linha atualizada para o usuário com Username {}.", usuario.getUsername());
+	            return false;
+	        }
+	    } catch (SQLException e) {
+	        logger.error("Erro ao atualizar usuário com Username {}: {}", usuario.getUsername(), e.getMessage(), e);
+	        return false;
+	    }
 	}
+
+
+
+
+
 
 	public boolean removerUsuario(Usuario usuario) {
 		String sql = "DELETE FROM Usuario WHERE username = ?";
@@ -225,9 +245,11 @@ public class DataInserter {
 
 	// Método para inserir um empréstimo
 	public boolean inserirEmprestimo(Emprestimo emprestimo) {
-		String sql = "INSERT INTO Emprestimo (livro_id, cliente_id, dataEmprestimo, dataDevolucaoPrevista) VALUES (?, ?, ?, ?)";
+		String sql = "INSERT INTO Emprestimo (livro_id, usuario_id, dataEmprestimo, dataDevolucaoPrevista) VALUES (?, ?, ?, ?)";
 
 		try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			logger.info("Tentando inserir empréstimo no banco de dados: {}", emprestimo);
+
 
 			pstmt.setInt(1, emprestimo.getLivro().getId());
 			pstmt.setInt(2, emprestimo.getUsuario().getId());
@@ -235,18 +257,20 @@ public class DataInserter {
 			pstmt.setDate(4, Date.valueOf(emprestimo.getDataDevolucaoPrevista()));
 
 			int rowsAffected = pstmt.executeUpdate();
+			logger.info("Executado: {}", emprestimo);
+
 			if (rowsAffected > 0) {
 				logger.info("Empréstimo inserido com sucesso para o livro '{}' pelo cliente '{}'.",
 						emprestimo.getLivro().getTitulo(), emprestimo.getUsuario().getNome());
 				return true;
 			} else {
-				logger.warn("Falha ao inserir o empréstimo: nenhuma linha foi afetada.");
+				logger.info("Falha ao inserir o empréstimo: nenhuma linha foi afetada.");
 				return false;
 			}
 
 		} catch (SQLException e) {
-			logger.error("Erro ao inserir empréstimo para o livro '{}': {}", emprestimo.getLivro().getTitulo(),
-					e.getMessage(), e);
+			logger.info("Erro ao inserir empréstimo para o livro '{}': {}", emprestimo.getLivro().getTitulo(), e.getMessage(), e);
+
 			return false;
 		}
 	}
