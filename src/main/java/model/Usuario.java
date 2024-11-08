@@ -96,7 +96,23 @@ public class Usuario {
         this.username = username;
 
     }
-
+    
+    public Usuario(int id,String username, String nome) {
+    	
+    	this.id = id;
+    	this.username = username;
+        this.nome = nome;
+    }
+    
+    public Usuario(int id, String username, boolean usuarioAtivo, String nome, String email, String endereco, String telefone) {
+        this.id = id;
+        this.username = username;
+        this.usuarioAtivo = usuarioAtivo;
+        this.nome = nome;
+        this.email = email;
+        this.endereco = endereco;
+        this.telefone = telefone;
+    }
 
     // Construtor padrão exigido pelo JPA
     protected Usuario() {}

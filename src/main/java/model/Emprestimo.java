@@ -24,7 +24,7 @@ public class Emprestimo {
     private LocalDate dataDevolucaoEfetiva;
 
     // Construtor padrão exigido pelo JPA
-    public Emprestimo() {
+    private Emprestimo() {
     }
 
     // Construtor para novo empréstimo (sem data de devolução efetiva)
@@ -78,8 +78,12 @@ public class Emprestimo {
     public LocalDate getDataDevolucaoEfetiva() {
         return dataDevolucaoEfetiva;
     }
+   
+    public void setDataDevolucaoEfetiva(LocalDate dataDevolucaoEfetiva) {
+		this.dataDevolucaoEfetiva = dataDevolucaoEfetiva;
+	}
 
-    public void registrarDevolucao(LocalDate dataDevolucaoEfetiva) {
+	public void registrarDevolucao(LocalDate dataDevolucaoEfetiva) {
         if (dataDevolucaoEfetiva.isBefore(dataEmprestimo)) {
             throw new IllegalArgumentException("A data de devolução não pode ser anterior à data do empréstimo.");
         }

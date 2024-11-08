@@ -49,6 +49,20 @@ public class Livro {
         this.quantidadeEstoque = quantidadeEstoque;
         this.isbn = isbn;
     }
+    public Livro(int id, String titulo, String autor, String categoria, String isbn) {
+        this.id = id;
+        this.titulo = titulo;
+        this.autor = autor;
+        this.categoria = categoria;
+        this.isbn = isbn;
+    }
+    
+    
+    public Livro(int id, String titulo) {
+        this.id = id;
+        this.titulo = titulo;
+
+    }
 
     // Construtor padrão exigido pelo JPA
     protected Livro() {}
