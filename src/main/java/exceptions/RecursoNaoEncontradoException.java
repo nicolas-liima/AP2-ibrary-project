@@ -1,4 +1,4 @@
-	package exceptions; // ou onde você achar mais apropriado
+	package exceptions; 
 
 	public class RecursoNaoEncontradoException extends RuntimeException {
 	    public RecursoNaoEncontradoException(String mensagem) {

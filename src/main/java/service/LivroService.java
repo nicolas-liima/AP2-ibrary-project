@@ -76,13 +76,13 @@ public class LivroService {
   
     
     public boolean atualizarLivro(String isbn, Livro livroAtualizado) {
-        // Busca o usuário existente com o username antigo
+        // Busca o livro existente com o isbn antigo
         Livro livroExistente = dataRetriever.buscarLivroPorISBN(isbn);
         if (livroExistente == null) {
             throw new RecursoNaoEncontradoException("Livro não encontrado.");
         }
 
-        // Verifica se o novo username é diferente do atual e se já existe no banco
+        // Verifica se o novo isbn é diferente do atual e se já existe no banco
         if (!livroExistente.getIsbn().equals(livroAtualizado.getIsbn())
                 && livroExisteComIsbn(livroAtualizado.getIsbn())) {
             throw new ObjetoDuplicadoException("ISBN já está em uso.");

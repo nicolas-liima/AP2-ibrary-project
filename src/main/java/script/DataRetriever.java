@@ -24,7 +24,6 @@ public class DataRetriever {
 	private static final String SELECT_USUARIO = "SELECT * FROM Usuario";
 //	private static final String SELECT_RESERVA = "SELECT r.id AS reserva_id, r.livro_id, r.cliente_id, r.dataReserva, r.dataExpiracao, l.titulo, l.autor, l.categoria, l.quantidadeEstoque, l.isbn, u.nome AS cliente_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email FROM Reserva r JOIN Livro l ON r.livro_id = l.id JOIN Usuario u ON r.cliente_id = u.id";
 	private static final String SELECT_EMPRESTIMO = "SELECT * FROM Emprestimo";
-//	private static final String SELECT_EMPRESTIMO = "SELECT e.id AS emprestimo_id, e.livro_id, e.usuario_id, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, l.titulo, l.autor, l.categoria, l.quantidadeEstoque, l.isbn, u.nome AS cliente_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email FROM Emprestimo e JOIN Livro l ON e.livro_id = l.id JOIN Usuario u ON e.usuario_id = u.id";
     private static final String SELECT_EMPRESTIMO_ABERTO = "SELECT * FROM Emprestimo WHERE usuario_id = ? AND livro_id = ? AND dataDevolucaoEfetiva IS NULL";
 
 	private static final Logger logger = LoggerFactory.getLogger(DataRetriever.class);
@@ -360,7 +359,7 @@ public class DataRetriever {
 	    String nome = rs.getString("nome");	    
 	    String cpf = rs.getString("cpf");
 	    String email = rs.getString("email");    
-	    String endereco = rs.getString("endereco"); // Agora essas informações serão parte do Usuario
+	    String endereco = rs.getString("endereco");
 	    String telefone = rs.getString("telefone");
 	    
 	    // Verifica se o tipo de usuário está dentro do intervalo do enum
@@ -368,7 +367,7 @@ public class DataRetriever {
 	        throw new SQLException("Tipo de usuário inválido: " + tipoUsuario);
 	    }
 
-	    Usuario.TipoUsuario tipoUsuarioEnum = Usuario.TipoUsuario.values()[tipoUsuario - 1]; // Supondo que o enum comece em 1
+	    Usuario.TipoUsuario tipoUsuarioEnum = Usuario.TipoUsuario.values()[tipoUsuario - 1];
 
 	    // Criação do Usuario com base nas informações obtidas do ResultSet
 	    return new Usuario(id, username, senha, tipoUsuarioEnum, usuarioAtivo, nome, cpf, email, endereco, telefone);
@@ -396,10 +395,10 @@ public class DataRetriever {
 	    int id = rs.getInt("id");
 
 	    // Montar objeto Livro utilizando o método criarLivro
-	    Livro livro = criarLivro(rs); // Chamando o método criarLivro para montar o objeto Livro
+	    Livro livro = criarLivro(rs);
 
 	    // Montar objeto Usuario utilizando o método criarUsuario
-	    Usuario usuario = criarUsuario(rs); // Chamando o método criarUsuario para montar o objeto Usuario
+	    Usuario usuario = criarUsuario(rs);
 
 	    LocalDate dataEmprestimo = rs.getDate("data_emprestimo").toLocalDate();
 	    LocalDate dataDevolucaoPrevista = rs.getDate("data_devolucao_prevista").toLocalDate();
@@ -412,81 +411,53 @@ public class DataRetriever {
 	    return new Emprestimo(id, livro, usuario, dataEmprestimo, dataDevolucaoPrevista, dataDevolucaoEfetiva);
 	}
 	
-//	private Emprestimo criarEmprestimo(ResultSet rs) throws SQLException {
-//	    int id = rs.getInt("id");
-//
-//	    int livroId = rs.getInt("livro_id");
-//	    int usuarioId = rs.getInt("usuario_id");
-//
-//	    // Buscar o Livro e o Usuário completos pelos seus IDs
-//	    Livro livro = buscarLivroPorId(livroId);  // Buscar Livro pelo ID
-//	    Usuario usuario = buscarUsuarioPorId(usuarioId);  // Buscar Usuário pelo ID
-//
-//	    if (livro == null || usuario == null) {
-//	        throw new SQLException("Livro ou Usuário não encontrado para o empréstimo.");
-//	    }
-//
-//	    LocalDate dataEmprestimo = rs.getDate("data_emprestimo").toLocalDate();
-//	    LocalDate dataDevolucaoPrevista = rs.getDate("data_devolucao_prevista").toLocalDate();
-//
-//	    LocalDate dataDevolucaoEfetiva = rs.getDate("data_devolucao_efetiva") != null
-//	            ? rs.getDate("data_devolucao_efetiva").toLocalDate()
-//	            : null;
-//
-//	    // Criar e retornar o objeto Emprestimo com os objetos completos de Livro e Usuario
-//	    return new Emprestimo(id, livro, usuario, dataEmprestimo, dataDevolucaoPrevista, dataDevolucaoEfetiva);
-//	}
-
-
-
-
 	// Exemplo de como chamar o método genérico
 	public List<Livro> buscarLivrosPorTitulo(String titulo) {
 		String sql = "SELECT * FROM Livro WHERE titulo LIKE ?";
 		List<Livro> livro = buscarPorFiltro(Livro.class, sql, "%" + titulo + "%");
-		return livro; // Retorna a lista de reservas (pode ser vazia)
+		return livro;
 	}
 
 	public List<Livro> buscarLivrosPorAutor(String autor) {
 		String sql = "SELECT * FROM Livro WHERE autor LIKE ?";
 		List<Livro> livro = buscarPorFiltro(Livro.class, sql, "%" + autor + "%");
-		return livro; // Retorna a lista de reservas (pode ser vazia)
+		return livro; 
 	}
 
 	public Livro buscarLivroPorISBN(String isbn) {
 		String sql = "SELECT * FROM Livro WHERE isbn = ?";
 		List<Livro> livro = buscarPorFiltro(Livro.class, sql, isbn);
-		return livro.isEmpty() ? null : livro.get(0); // Retorna o primeiro usuário ou null se não houver
+		return livro.isEmpty() ? null : livro.get(0); 
 	}
 	
 	public Livro buscarLivroPorId(int id) {
 		String sql = "SELECT * FROM Livro WHERE id = ?";
 		List<Livro> livro = buscarPorFiltro(Livro.class, sql, id);
-		return livro.isEmpty() ? null : livro.get(0); // Retorna o primeiro usuário ou null se não houver
+		return livro.isEmpty() ? null : livro.get(0);
 	}
 
 
 	public List<Livro> buscarLivrosPorCategoria(String categoria) {
 		String sql = "SELECT * FROM Livro WHERE categoria = ?";
 		List<Livro> livro = buscarPorFiltro(Livro.class, sql, categoria);
-		return livro; // Retorna a lista de reservas (pode ser vazia)
+		return livro;
 	}
 	
 
 	public List<Usuario> buscarUsuariosPorNome(String nome) {
 		String sql = "SELECT * FROM Usuario WHERE nome LIKE ?";
 		List<Usuario> usuario = buscarPorFiltro(Usuario.class, sql, "%" + nome + "%");
-		return usuario; // Retorna a lista de reservas (pode ser vazia)
+		return usuario; 
 	}
 
 	public Usuario buscarUsuarioPorUsername(String username) {
 	    String sql = "SELECT * FROM Usuario WHERE username = ?";
-	    List<Usuario> usuario = buscarPorFiltro(Usuario.class, sql, username); // Passa o username sem aspas
+	    List<Usuario> usuario = buscarPorFiltro(Usuario.class, sql, username);
 	    return usuario.isEmpty() ? null : usuario.get(0); // Retorna o primeiro usuário ou null se não houver
 	}
 	
 	public Usuario buscarUsuarioAtivoPorUsernameESenha(String username, String senha) {
-	    String sql = "SELECT * FROM Usuarios WHERE username = ? AND senha = ? AND ativo = 1"; // Ajuste conforme sua tabela
+	    String sql = "SELECT * FROM Usuarios WHERE username = ? AND senha = ? AND ativo = 1";
 	    Usuario usuario = null; // Inicializa o usuário como nulo
 
 	    try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -496,7 +467,7 @@ public class DataRetriever {
 
 	        // Se houver resultados, cria o objeto Usuario
 	        if (rs.next()) {
-	            usuario = criarUsuario(rs); // Presumindo que criarUsuario trata da criação do objeto
+	            usuario = criarUsuario(rs); 
 	        }
 	    } catch (SQLException e) {
 	    	logger.error("Erro ao realizar busca: {}", e.getMessage(), e); // Tratar erro de forma apropriada
@@ -505,16 +476,11 @@ public class DataRetriever {
 	    return usuario; // Retorna o usuário encontrado ou nulo se não encontrado
 	}
 	
-//	private List<Usuario> buscarPorFiltroUsuarioAtivo(String username, String senha) {
-//	    String sql = "SELECT * FROM Usuarios WHERE username = ? AND senha = ? AND ativo = 1"; // Ajuste conforme sua tabela
-//	    return buscarPorFiltro(Usuario.class, sql, new Object[]{username, senha});
-//	}
-
 
 	public List<Usuario> buscarUsuarioPorCpf(String cpf) {
 		String sql = "SELECT * FROM Usuario WHERE cpf LIKE ?";
 		List<Usuario> usuario = buscarPorFiltro(Usuario.class, sql, cpf + "%");
-		return usuario; // Retorna a lista de reservas (pode ser vazia) 
+		return usuario; // Retorna a lista de usuarios 
 	}
 
 	public Usuario buscarUsuarioPorId(int id) {

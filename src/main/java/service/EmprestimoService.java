@@ -190,7 +190,4 @@ public class EmprestimoService {
 		return dataInserter.removerEmprestimo(emprestimo.getId());
 	}
 
-//    public List<Emprestimo> verificarAtrasados(List<Emprestimo> emprestimos) {
-//        return emprestimos.stream().filter(Emprestimo::isAtrasado).toList();
-//    }
 }

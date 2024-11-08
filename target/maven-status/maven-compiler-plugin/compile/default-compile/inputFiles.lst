@@ -8,10 +8,7 @@ C:\temp\eclipse\library\src\main\java\exceptions\AutenticacaoException.java
 C:\temp\eclipse\library\src\main\java\exceptions\GlobalExceptionHandler.java
 C:\temp\eclipse\library\src\main\java\exceptions\ObjetoDuplicadoException.java
 C:\temp\eclipse\library\src\main\java\exceptions\RecursoNaoEncontradoException.java
-C:\temp\eclipse\library\src\main\java\exceptions\ResponseError.java
-C:\temp\eclipse\library\src\main\java\model\Cliente.java
 C:\temp\eclipse\library\src\main\java\model\Emprestimo.java
-C:\temp\eclipse\library\src\main\java\model\Funcionario.java
 C:\temp\eclipse\library\src\main\java\model\Livro.java
 C:\temp\eclipse\library\src\main\java\model\Reserva.java
 C:\temp\eclipse\library\src\main\java\model\Usuario.java

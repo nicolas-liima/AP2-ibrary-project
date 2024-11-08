@@ -1,6 +1,5 @@
 package controller;
 
-import java.sql.SQLException;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -78,7 +77,7 @@ public class EmprestimoController {
                 throw new RecursoNaoEncontradoException("Nenhum empréstimo encontrado para o usuário: " + username);
             }
             
-            return ResponseEntity.ok(emprestimos); // Retorna 200 com a lista de empréstimos
+            return ResponseEntity.ok(emprestimos);
         } catch (RecursoNaoEncontradoException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Retorna 404 se o recurso não for encontrado
         } catch (Exception e) {

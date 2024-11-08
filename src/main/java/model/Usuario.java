@@ -14,7 +14,7 @@ public class Usuario {
     private String username;
 
 
-    @Column(nullable = false) // Adicionando restrições para a senha
+    @Column(nullable = false) 
     private String senha;
     
     @Enumerated(EnumType.STRING)  // Use STRING para garantir que o valor seja convertido corretamente para o nome da enum
@@ -24,7 +24,7 @@ public class Usuario {
     @Column
     protected boolean usuarioAtivo;
     
-    @Column(nullable = false, length = 100) // Adicionando restrições para o nome
+    @Column(nullable = false, length = 100)
     private String nome;
 
     @Column(nullable = false)
