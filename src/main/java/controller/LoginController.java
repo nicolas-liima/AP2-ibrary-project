@@ -9,6 +9,7 @@ import service.LoginService;
 import exceptions.AutenticacaoException;
 import exceptions.RecursoNaoEncontradoException;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/login")
 public class LoginController {
