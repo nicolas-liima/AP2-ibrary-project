@@ -84,6 +84,12 @@ public class UsuarioService {
             throw new ObjetoDuplicadoException("Username já está em uso.");
         }
 
+        // Verifica se o CPF do usuário atualizado é válido
+        if (!validarCPF(usuarioAtualizado.getCpf())) {
+            logger.error("CPF inválido: {}", usuarioAtualizado.getCpf());
+            throw new IllegalArgumentException("CPF inválido.");
+        }
+
         // Atualiza o usuário no banco
         return dataInserter.atualizarUsuario(username, usuarioAtualizado);
     }
