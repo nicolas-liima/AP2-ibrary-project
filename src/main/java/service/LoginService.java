@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import exceptions.AutenticacaoException;
 import exceptions.RecursoNaoEncontradoException;
 import model.Usuario;
-import script.DataRetriever;
 
 @Service
 public class LoginService {

@@ -24,7 +24,7 @@ public class Emprestimo {
     private LocalDate dataDevolucaoEfetiva;
 
     // Construtor padrão exigido pelo JPA
-    private Emprestimo() {
+    protected Emprestimo() {
     }
 
     // Construtor para novo empréstimo (sem data de devolução efetiva)

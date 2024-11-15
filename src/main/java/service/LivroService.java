@@ -1,5 +1,6 @@
 package service;
 
+import java.sql.SQLException;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -75,22 +76,28 @@ public class LivroService {
     }
   
     
-    public boolean atualizarLivro(String isbn, Livro livroAtualizado) {
-        // Busca o livro existente com o isbn antigo
+    public boolean atualizarLivro(String isbn, Livro livroAtualizado) throws SQLException {
+        // Busca o livro existente com o ISBN antigo
         Livro livroExistente = dataRetriever.buscarLivroPorISBN(isbn);
         if (livroExistente == null) {
             throw new RecursoNaoEncontradoException("Livro não encontrado.");
         }
 
-        // Verifica se o novo isbn é diferente do atual e se já existe no banco
+        // Verifica se o novo ISBN é diferente do atual e se já existe no banco
         if (!livroExistente.getIsbn().equals(livroAtualizado.getIsbn())
                 && livroExisteComIsbn(livroAtualizado.getIsbn())) {
             throw new ObjetoDuplicadoException("ISBN já está em uso.");
         }
 
-        // Atualiza o usuário no banco
-        return dataInserter.atualizarLivro(isbn, livroAtualizado);
+        // Atualiza o livro no banco de dados
+        boolean livroAtualizadoComSucesso = dataInserter.atualizarLivro(isbn, livroAtualizado);
+        if (!livroAtualizadoComSucesso) {
+            throw new SQLException("Falha ao atualizar as informações do livro.");
+        }
+
+        return true; // Indica que o processo foi concluído com sucesso
     }
+
 
     
     public boolean livroExisteComIsbn(String isbn) {

@@ -3,12 +3,15 @@ application\WebConfig.class
 exceptions\RecursoNaoEncontradoException.class
 model\Usuario.class
 controller\EmprestimoController.class
+model\Reserva.class
+controller\ReservaController.class
 exceptions\ObjetoDuplicadoException.class
 service\UsuarioService.class
 controller\LoginController.class
 service\EmprestimoService.class
 controller\UsuarioController.class
 script\DataInserter.class
+service\ReservaService.class
 service\LoginService.class
 application\LibraryApplication.class
 model\Usuario$TipoUsuario.class

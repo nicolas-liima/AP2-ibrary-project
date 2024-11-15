@@ -3,7 +3,6 @@ package script;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 
@@ -15,6 +14,7 @@ import org.springframework.stereotype.Component;
 import jakarta.transaction.Transactional;
 import model.Emprestimo;
 import model.Livro;
+import model.Reserva;
 //import model.Reserva;
 import model.Usuario;
 import model.Usuario.TipoUsuario;
@@ -79,7 +79,6 @@ public class DataInserter {
 	        return false;
 	    }
 	}
-
 
 	// Método para remover um livro pelo ISBN
 	public boolean removerLivroPorIsbn(String isbn) {
@@ -170,11 +169,6 @@ public class DataInserter {
 	    }
 	}
 
-
-
-
-
-
 	public boolean removerUsuario(Usuario usuario) {
 		String sql = "DELETE FROM Usuario WHERE username = ?";
 
@@ -195,54 +189,6 @@ public class DataInserter {
 			return false;
 		}
 	}
-
-	// Método para inserir uma nova reserva no banco de dados
-//	public boolean inserirReserva(Reserva reserva) {
-//		String sql = "INSERT INTO Reserva (livro_id, cliente_id, livroReservado, dataReserva, dataExpiracao) VALUES (?, ?, ?, ?, ?)";
-//
-//		try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-//
-//			pstmt.setInt(1, reserva.getLivro().getId());
-//			pstmt.setInt(2, reserva.getUsuario().getId());
-//			pstmt.setBoolean(3, reserva.isLivroReservado());
-//			pstmt.setDate(4, Date.valueOf(reserva.getDataReserva()));
-//			pstmt.setDate(5, Date.valueOf(reserva.getDataExpiracao()));
-//
-//			int rowsAffected = pstmt.executeUpdate();
-//			if (rowsAffected > 0) {
-//				logger.info("Reserva inserida com sucesso para o cliente '{}' no livro '{}'.",
-//						reserva.getUsuario().getId(), reserva.getLivro().getId());
-//				return true;
-//			} else {
-//				logger.warn("A inserção da reserva não afetou nenhuma linha.");
-//				return false;
-//			}
-//		} catch (SQLException e) {
-//			logger.error("Erro ao inserir reserva para o cliente '{}' no livro '{}': {}", reserva.getUsuario().getId(),
-//					reserva.getLivro().getId(), e.getMessage(), e);
-//			return false;
-//		}
-//	}
-//
-//	public boolean removerReserva(int reservaId) {
-//		String sql = "DELETE FROM Reserva WHERE id = ?";
-//
-//		try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-//
-//			pstmt.setInt(1, reservaId);
-//			int rowsAffected = pstmt.executeUpdate();
-//			if (rowsAffected > 0) {
-//				logger.info("Reserva com ID '{}' removida com sucesso.", reservaId);
-//				return true;
-//			} else {
-//				logger.warn("Nenhuma reserva encontrada com o ID '{}'.", reservaId);
-//				return false;
-//			}
-//		} catch (SQLException e) {
-//			logger.error("Erro ao remover reserva com ID '{}': {}", reservaId, e.getMessage(), e);
-//			return false;
-//		}
-//	}
 
 	public boolean inserirEmprestimo(Emprestimo emprestimo) {
 	    String sql = "INSERT INTO Emprestimo (livro_id, usuario_id, dataEmprestimo, dataDevolucaoPrevista) VALUES (?, ?, ?, ?)";
@@ -270,16 +216,7 @@ public class DataInserter {
 	        return false;
 	    }
 	}
-
-
-
-    public static LocalDate calcularDataDevolucaoPrevista(LocalDate dataEmprestimo) {
-        // Adiciona 14 dias à data de empréstimo
-        return dataEmprestimo.plusDays(14);
-    }
-    
-
-
+  
 	public boolean devolverEmprestimo(Emprestimo emprestimo) {
 		String sql = "UPDATE Emprestimo SET dataDevolucaoEfetiva = ? WHERE id = ?";
 
@@ -321,5 +258,50 @@ public class DataInserter {
 			logger.error("Erro ao remover empréstimo com ID {}: {}", emprestimoId, e.getMessage(), e);
 			return false;
 		}
+	}
+	
+	// Método para inserir uma nova reserva
+	public boolean inserirReserva(Reserva reserva) {
+	    String sql = "INSERT INTO Reserva (livro_id, usuario_id, dataReserva, dataExpiracao) VALUES (?, ?, ?, ?)";
+	    
+	    try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+	        pstmt.setInt(1, reserva.getLivro().getId());
+	        pstmt.setInt(2, reserva.getUsuario().getId());
+	        pstmt.setDate(3, Date.valueOf(reserva.getDataReserva()));
+	        pstmt.setDate(4, Date.valueOf(reserva.getDataExpiracao()));
+
+	        pstmt.executeUpdate();
+	        logger.info("Reserva inserida com sucesso para o livro ID {} e usuário ID {}.", reserva.getLivro().getId(), reserva.getUsuario().getId());
+	        return true;
+
+	    } catch (SQLException e) {
+	        logger.error("Erro ao inserir reserva: {}", e.getMessage(), e);
+	        return false;
+	    }
+	}
+
+
+	// Método para remover uma reserva
+	public boolean removerReserva(int reservaId) {
+	    String sql = "DELETE FROM Reserva WHERE id = ?";
+	    
+	    try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+	        pstmt.setInt(1, reservaId);
+
+	        int rowsAffected = pstmt.executeUpdate();
+	        if (rowsAffected > 0) {
+	            logger.info("Reserva com ID {} removida com sucesso.", reservaId);
+	            return true;
+	        } else {
+	            logger.warn("Nenhuma reserva encontrada com ID {} para remoção.", reservaId);
+	            return false;
+	        }
+
+	    } catch (SQLException e) {
+	        logger.error("Erro ao remover reserva: {}", e.getMessage(), e);
+	        return false;
+	    }
 	}
 }

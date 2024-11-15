@@ -1,6 +1,7 @@
 package script;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import model.Emprestimo;
 import model.Livro;
+import model.Reserva;
 import model.Usuario;
 
 @Component
@@ -22,8 +24,22 @@ public class DataRetriever {
 
 	private static final String SELECT_LIVRO = "SELECT * FROM Livro";
 	private static final String SELECT_USUARIO = "SELECT * FROM Usuario";
-//	private static final String SELECT_RESERVA = "SELECT r.id AS reserva_id, r.livro_id, r.cliente_id, r.dataReserva, r.dataExpiracao, l.titulo, l.autor, l.categoria, l.quantidadeEstoque, l.isbn, u.nome AS cliente_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email FROM Reserva r JOIN Livro l ON r.livro_id = l.id JOIN Usuario u ON r.cliente_id = u.id";
-	private static final String SELECT_EMPRESTIMO = "SELECT * FROM Emprestimo";
+    private static final String SELECT_RESERVA = "SELECT r.id AS reservaId, r.dataReserva, r.dataExpiracao, " +
+    		"u.id AS usuarioId, u.username AS usuarioUsername, u.nome AS usuarioNome, u.email AS usuarioEmail, " +
+		    "u.endereco AS usuarioEndereco, u.telefone AS usuarioTelefone, u.usuarioAtivo as userAtivo, " +
+		    "l.id AS livroId, l.titulo AS livroTitulo, l.isbn AS livroIsbn,l.quantidadeEstoque AS livroQuantidade , " +
+		    "l.categoria AS livroCategoria, l.autor AS livroAutor " +
+    		"FROM Reserva r " +
+		    "JOIN Livro l ON r.livro_id = l.id " +
+    		"JOIN Usuario u ON r.usuario_id = u.id ";
+	private static final String SELECT_EMPRESTIMO ="SELECT e.id AS emprestimoId, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, " +
+		    "u.id AS usuarioId, u.username AS usuarioUsername, u.nome AS usuarioNome, u.email AS usuarioEmail, " +
+		    "u.endereco AS usuarioEndereco, u.telefone AS usuarioTelefone, u.usuarioAtivo as userAtivo, " +
+		    "l.id AS livroId, l.titulo AS livroTitulo, l.isbn AS livroIsbn,l.quantidadeEstoque AS livroQuantidade , " +
+		    "l.categoria AS livroCategoria, l.autor AS livroAutor " +
+		    "FROM Emprestimo e " +
+		    "JOIN Usuario u ON e.usuario_id = u.id " +
+		    "JOIN Livro l ON e.livro_id = l.id ";
     private static final String SELECT_EMPRESTIMO_ABERTO = "SELECT * FROM Emprestimo WHERE usuario_id = ? AND livro_id = ? AND dataDevolucaoEfetiva IS NULL";
 
 	private static final Logger logger = LoggerFactory.getLogger(DataRetriever.class);
@@ -50,10 +66,6 @@ public class DataRetriever {
 					resultados.add(tipo.cast(criarLivro(rs)));
 				} else if (tipo == Usuario.class) {
 					resultados.add(tipo.cast(criarUsuario(rs)));
-//				} else if (tipo == Reserva.class) {
-//					resultados.add(tipo.cast(criarReserva(rs)));
-				} else if (tipo == Emprestimo.class) {
-					resultados.add(tipo.cast(criarEmprestimo(rs)));
 				}
 			}
 		} catch (SQLException e) {
@@ -70,10 +82,6 @@ public class DataRetriever {
 			sql = SELECT_LIVRO;
 		} else if (tipo == Usuario.class) {
 			sql = SELECT_USUARIO;
-//		} else if (tipo == Reserva.class) {
-//			sql = SELECT_RESERVA;
-		} else if (tipo == Emprestimo.class) {
-			sql = SELECT_EMPRESTIMO;
 		}
 
 		try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -83,10 +91,6 @@ public class DataRetriever {
 					resultados.add(tipo.cast(criarLivro(rs)));
 				} else if (tipo == Usuario.class) {
 					resultados.add(tipo.cast(criarUsuario(rs)));
-//				} else if (tipo == Reserva.class) {
-//					resultados.add(tipo.cast(criarReserva(rs)));
-				} else if (tipo == Emprestimo.class) {
-					resultados.add(tipo.cast(criarEmprestimo(rs)));
 				}
 			}
 		} catch (SQLException e) {
@@ -98,15 +102,8 @@ public class DataRetriever {
 	public List<Emprestimo> listarEmprestimos() {
 	    List<Emprestimo> emprestimos = new ArrayList<>();
 	    
-	    // Consulta com JOINs para buscar todas as informações em uma única query
-	    String sql = "SELECT e.id AS emprestimoId, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva,  " +
-	             "u.id AS usuarioId, u.username AS usuarioUsername, u.nome AS usuarioNome,  " +
-	             "l.id AS livroId, l.titulo AS livroTitulo  " +
-	             "FROM Emprestimo e " +
-	             "JOIN Usuario u ON e.usuario_id = u.id  " +
-	             "JOIN Livro l ON e.livro_id = l.id";
 	    
-	    try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	    try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(SELECT_EMPRESTIMO)) {
 	        ResultSet rs = pstmt.executeQuery();
 	        
 	        while (rs.next()) {
@@ -147,15 +144,10 @@ public class DataRetriever {
 	    
 	    return emprestimos;
 	}
+	
 	public List<Emprestimo> listarEmprestimosPorUsername(String username) {
 	    List<Emprestimo> emprestimos = new ArrayList<>();
-	    String sql = "SELECT e.id AS emprestimoId, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, " +
-	                 "u.id AS usuarioId, u.username AS usuarioUsername, u.nome AS usuarioNome, " +
-	                 "l.id AS livroId, l.titulo AS livroTitulo " +
-	                 "FROM Emprestimo e " +
-	                 "JOIN Usuario u ON e.usuario_id = u.id " +
-	                 "JOIN Livro l ON e.livro_id = l.id " +
-	                 "WHERE u.username = ?"; // Filtrando pelo username
+	    String sql = SELECT_EMPRESTIMO + "WHERE u.username = ?"; // Filtrando pelo username
 
 	    try (Connection conn = databaseManager.getConnection();
 	         PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -183,15 +175,7 @@ public class DataRetriever {
 	}
 	
 	public Emprestimo buscarEmprestimoPorId(int id) {
-	    String sql = "SELECT e.id AS emprestimoId, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, " +
-	                 "u.id AS usuarioId, u.username AS usuarioUsername, u.nome AS usuarioNome, u.email AS usuarioEmail, " +
-	                 "u.endereco AS usuarioEndereco, u.telefone AS usuarioTelefone, u.usuarioAtivo as userAtivo, " +
-	                 "l.id AS livroId, l.titulo AS livroTitulo, l.isbn AS livroIsbn,l.quantidadeEstoque AS livroQuantidade , " +
-	                 "l.categoria AS livroCategoria, l.autor AS livroAutor " +
-	                 "FROM Emprestimo e " +
-	                 "JOIN Usuario u ON e.usuario_id = u.id " +
-	                 "JOIN Livro l ON e.livro_id = l.id " +
-	                 "WHERE e.id = ?";
+	    String sql = SELECT_EMPRESTIMO + "WHERE e.id = ?";
 
 	    try (Connection conn = databaseManager.getConnection();
 	         PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -269,6 +253,7 @@ public class DataRetriever {
 
 	    return emprestimos;
 	}
+	
 	public List<Emprestimo> listarEmprestimosAtivos() throws SQLException {
 	    List<Emprestimo> emprestimos = new ArrayList<>();
 	    String sql = "SELECT e.id AS emprestimoId, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, " +
@@ -302,6 +287,7 @@ public class DataRetriever {
 
 	    return emprestimos;
 	}
+	
 	public List<Emprestimo> listarEmprestimosFinalizados() throws SQLException {
 	    List<Emprestimo> emprestimos = new ArrayList<>();
 	    String sql = "SELECT e.id AS emprestimoId, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, " +
@@ -337,9 +323,149 @@ public class DataRetriever {
 	}
 
 	
+    // Método para listar todas as reservas
+	public List<Reserva> listarReservas() {
+	    List<Reserva> reservas = new ArrayList<>();
+	    try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(SELECT_RESERVA)) {
+	        ResultSet rs = pstmt.executeQuery();
+	        
+	        while (rs.next()) {
+	            // Criação do objeto Usuario
+	            Usuario usuario = new Usuario(
+		                rs.getInt("usuarioId"),
+		                rs.getString("usuarioUsername"),
+		                rs.getString("usuarioNome")
+		                
+		            );
+		            
+		            Livro livro = new Livro(
+		                rs.getInt("livroId"),
+		                rs.getString("livroTitulo")
+		                
+		            );
+	            // Conversão das datas e outros campos
+	            LocalDate dataSolicitacao = rs.getDate("dataReserva").toLocalDate();
+	            LocalDate dataRetirada = rs.getDate("dataExpiracao") != null ? rs.getDate("dataExpiracao").toLocalDate() : null;
+	            
+	            // Criação do objeto Reserva com os dados completos
+	            Reserva reserva = new Reserva(
+	                rs.getInt("reservaId"), // ID da reserva
+	                livro, // Objeto Livro
+	                usuario, // Objeto Usuario
+	                dataSolicitacao, // Data da solicitação
+	                dataRetirada // Data de retirada (pode ser null)
+	            );
+	            
+	            reservas.add(reserva);
+	        }
+	    } catch (SQLException e) {
+	        logger.error("Erro ao buscar reservas: {}", e.getMessage(), e);
+	    }
+	    return reservas;
+	}
 
+	public Reserva buscarReservaPorId(int id) {
+	    String sql = SELECT_RESERVA + "WHERE r.id = ?";
 
+	    try (Connection conn = databaseManager.getConnection();
+	         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	        
+	        pstmt.setInt(1, id);
+	        
+	        ResultSet rs = pstmt.executeQuery();
+	        
+	        if (rs.next()) {
+	        	
+	            Livro livro = new Livro(
+	                    rs.getInt("livroId"),
+	                    rs.getString("livroTitulo"),
+	                    rs.getString("livroAutor"),
+	                    rs.getString("livroCategoria"),
+	                    rs.getInt("livroQuantidade"),
+	                    rs.getString("livroIsbn")
+	                );
+	            
+	            Usuario usuario = new Usuario(
+	                rs.getInt("usuarioId"),
+	                rs.getString("usuarioUsername"),
+	                rs.getBoolean("userAtivo"),
+	                rs.getString("usuarioNome"),
+	                rs.getString("usuarioEmail"),
+	                rs.getString("usuarioEndereco"),
+	                rs.getString("usuarioTelefone")
+	            );
 
+	            return new Reserva(
+	                rs.getInt("reservaId"),
+	                livro,
+	                usuario,
+	                rs.getDate("dataReserva").toLocalDate(),
+	                rs.getDate("dataExpiracao").toLocalDate()
+	            );
+	            
+	        }
+	    } catch (SQLException e) {
+	        logger.error("Erro ao buscar reserva com ID {}: {}", id, e.getMessage(), e);
+	    }
+	    
+	    return null; // Retorna null se o empréstimo não for encontrado
+	}
+	
+	public List<Reserva> listarReservasAtrasadas() {
+	    List<Reserva> reservas = new ArrayList<>();
+	    String sql = SELECT_RESERVA + " WHERE r.dataExpiracao < CAST(GETDATE() AS DATE)"; // Filtrando pela reserva com atraso na retirada.
+
+	    try (Connection conn = databaseManager.getConnection();
+	         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	        ResultSet rs = pstmt.executeQuery();	
+
+	        while (rs.next()) {
+	            Livro livro = new Livro(rs.getInt("livroId"), rs.getString("livroTitulo"));
+	            Usuario usuario = new Usuario(rs.getInt("usuarioId"), rs.getString("usuarioUsername"), rs.getString("usuarioNome"));
+	            Reserva reserva = new Reserva(
+		                rs.getInt("reservaId"),
+		                livro,
+		                usuario,
+		                rs.getDate("dataReserva").toLocalDate(),
+		                rs.getDate("dataExpiracao").toLocalDate()
+		            );
+	            reservas.add(reserva);
+	        }
+	    } catch (SQLException e) {
+	        logger.error("Erro ao buscar reservas atrasadas: {}", e.getMessage(), e);
+	    }
+
+	    return reservas;
+	}
+	
+	public List<Reserva> listarReservasPorUsername(String username) {
+	    List<Reserva> reservas = new ArrayList<>();
+	    String sql = SELECT_RESERVA + "WHERE u.username = ?"; // Filtrando pelo username
+
+	    try (Connection conn = databaseManager.getConnection();
+	         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	        pstmt.setString(1, username); // Definindo o parâmetro username
+	        ResultSet rs = pstmt.executeQuery();
+
+	        while (rs.next()) {
+	            Livro livro = new Livro(rs.getInt("livroId"), rs.getString("livroTitulo"));
+	            Usuario usuario = new Usuario(rs.getInt("usuarioId"), rs.getString("usuarioUsername"), rs.getString("usuarioNome"));
+	            Reserva reserva = new Reserva(
+		                rs.getInt("reservaId"),
+		                livro,
+		                usuario,
+		                rs.getDate("dataReserva").toLocalDate(),
+		                rs.getDate("dataExpiracao").toLocalDate()
+		            );
+	            reservas.add(reserva);
+	        }
+	    } catch (SQLException e) {
+	        logger.error("Erro ao buscar reservas para o usuário {}: {}", username, e.getMessage(), e);
+	    }
+
+	    return reservas;
+	}
+	
 	private Livro criarLivro(ResultSet rs) throws SQLException {
 		int id = rs.getInt("id");
 		String titulo = rs.getString("titulo");
@@ -373,44 +499,6 @@ public class DataRetriever {
 	    return new Usuario(id, username, senha, tipoUsuarioEnum, usuarioAtivo, nome, cpf, email, endereco, telefone);
 	}
 
-
-//	private Reserva criarReserva(ResultSet rs) throws SQLException {
-//	    int id = rs.getInt("id");
-//
-//	    // Montar objeto Livro utilizando o método criarLivro
-//	    Livro livro = criarLivro(rs); // Chamando o método criarLivro para montar o objeto Livro
-//
-//	    // Montar objeto Usuario (agora representando Cliente)
-//	    Usuario usuario = criarUsuario(rs); // Chamando o método criarUsuario para montar o objeto Usuario
-//	    boolean livroReservado = rs.getBoolean("livro_reservado");
-//	    LocalDate dataReserva = rs.getDate("data_reserva").toLocalDate();
-//	    LocalDate dataExpiracao = rs.getDate("data_expiracao").toLocalDate();
-//	    // Criar a Reserva, incluindo o novo parâmetro
-//	    return new Reserva(id, livro, usuario, livroReservado, dataReserva, dataExpiracao);
-//	}
-
-
-
-	private Emprestimo criarEmprestimo(ResultSet rs) throws SQLException {
-	    int id = rs.getInt("id");
-
-	    // Montar objeto Livro utilizando o método criarLivro
-	    Livro livro = criarLivro(rs);
-
-	    // Montar objeto Usuario utilizando o método criarUsuario
-	    Usuario usuario = criarUsuario(rs);
-
-	    LocalDate dataEmprestimo = rs.getDate("data_emprestimo").toLocalDate();
-	    LocalDate dataDevolucaoPrevista = rs.getDate("data_devolucao_prevista").toLocalDate();
-
-	    LocalDate dataDevolucaoEfetiva = rs.getDate("data_devolucao_efetiva") != null
-	            ? rs.getDate("data_devolucao_efetiva").toLocalDate()
-	            : null;
-
-	    // Criar o Empréstimo
-	    return new Emprestimo(id, livro, usuario, dataEmprestimo, dataDevolucaoPrevista, dataDevolucaoEfetiva);
-	}
-	
 	// Exemplo de como chamar o método genérico
 	public List<Livro> buscarLivrosPorTitulo(String titulo) {
 		String sql = "SELECT * FROM Livro WHERE titulo LIKE ?";
@@ -489,61 +577,15 @@ public class DataRetriever {
 	    return livros.isEmpty() ? null : livros.get(0); // Retorna o primeiro usuario ou null se não houver
 	}
 
-//	public List<Reserva> buscarReservasPorUsername(String username) {
-//		String sql = "SELECT r.id AS reserva_id, r.livro_id, r.usuario_id, r.dataReserva, r.dataExpiracao, "
-//				+ "l.titulo, l.autor, l.categoria, l.quantidadeEstoque, l.isbn, "
-//				+ "u.nome AS usuario_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
-//				+ "FROM Reserva r " + "JOIN Livro l ON r.livro_id = l.id " + "JOIN Usuario u ON r.usuario_id = u.id "
-//				+ "WHERE u.username = ?";
-//
-//		List<Reserva> reservas = buscarPorFiltro(Reserva.class, sql, username); // Passa o CPF diretamente
-//		return reservas; // Retorna a lista de reservas (pode ser vazia)
-//	}
-
-
-//	public Reserva buscarReservaPorId(int id) {
-//		String sql = "SELECT r.id AS reserva_id, r.livro_id, r.usuario_id, r.dataReserva, r.dataExpiracao, "
-//				+ "l.titulo, l.autor, l.categoria, l.quantidadeEstoque, l.isbn, "
-//				+ "u.nome AS usuario_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
-//				+ "FROM Reserva r " + "JOIN Livro l ON r.livro_id = l.id " + "JOIN Usuario u ON r.usuario_id = u.id "
-//				+ "WHERE r.id = ?";
-//
-//		List<Reserva> reserva = buscarPorFiltro(Reserva.class, sql, id);
-//		return reserva.isEmpty() ? null : reserva.get(0); // Retorna o primeiro resultado ou null se não houver
-//	}
-
-	public List<Emprestimo> buscarEmprestimosPorUsername(String username) {
-		String sql = "SELECT e.id AS emprestimo_id, e.livro_id, e.usuario_id, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, "
-				+ "l.titulo, l.autor, l.categoria, l.quantidadeEstoque, l.isbn, "
-				+ "u.nome AS usuario_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
-				+ "FROM Emprestimo e " + "JOIN Livro l ON e.livro_id = l.id " + "JOIN Usuario u ON e.usuario_id = u.id "
-				+ "WHERE u.username = ?";
-
-		List<Emprestimo> emprestimos = buscarPorFiltro(Emprestimo.class, sql, username);
-
-		// Verifica se a lista está vazia e imprime uma mensagem
-		if (emprestimos.isEmpty()) {
-			System.out.println("Nenhum empréstimo encontrado para o username: " + username);
-		}
-
-		return emprestimos; // Retorna a lista de empréstimos (pode ser vazia)
-	}
-
-public List<Emprestimo> listarEmprestimosAtivosPorLivro(int livroId) {
-    String sql = "SELECT e.id AS emprestimo_id, e.livro_id, e.usuario_id, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, "
-            + "l.titulo, l.autor, l.categoria, l.quantidadeEstoque, l.isbn, "
-            + "u.nome AS usuario_nome, u.senha, u.cpf, u.username, u.endereco, u.telefone, u.email "
-            + "FROM Emprestimo e "
-            + "JOIN Livro l ON e.livro_id = l.id "
-            + "JOIN Usuario u ON e.usuario_id = u.id "
-            + "WHERE e.dataDevolucaoEfetiva IS NULL AND e.livro_id = ?"; // Filtra empréstimos ativos pelo ID do livro
+	public List<Emprestimo> listarEmprestimosAtivosPorLivro(int livroId) {
+    String sql = SELECT_EMPRESTIMO + "WHERE e.dataDevolucaoEfetiva IS NULL AND e.livro_id = ?"; // Filtra empréstimos ativos pelo ID do livro
 
     // Chama o método genérico que busca por filtros, passando o ID do livro como parâmetro
     return buscarPorFiltro(Emprestimo.class, sql, new Object[]{livroId});
 }
 
 
-public List<LocalDate> verificarDisponibilidade(int livroId) {
+	public List<LocalDate> verificarDisponibilidade(int livroId) {
     Livro livro = buscarLivroPorId(livroId); // Método que busca o livro pelo ID
     List<LocalDate> datasDisponiveis = new ArrayList<>();
 
@@ -573,7 +615,7 @@ public List<LocalDate> verificarDisponibilidade(int livroId) {
 }
 
 
-public Integer verificarEmprestimoAberto(int usuarioId, int livroId) {
+	public Integer verificarEmprestimoAberto(int usuarioId, int livroId) {
     try (Connection conn = databaseManager.getConnection(); 
          PreparedStatement pstmt = conn.prepareStatement(SELECT_EMPRESTIMO_ABERTO)) {
         
@@ -591,5 +633,59 @@ public Integer verificarEmprestimoAberto(int usuarioId, int livroId) {
     }
     return null; // Nenhum empréstimo em aberto encontrado
 }
+
+	public Integer verificarReservaAberta(int usuarioId, int livroId) throws SQLException {
+	    String sql = "SELECT id FROM reserva WHERE usuario_id = ? AND livro_id = ?";
+	    try (Connection conn = databaseManager.getConnection(); 
+	         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+	        stmt.setInt(1, usuarioId);
+	        stmt.setInt(2, livroId);
+
+	        try (ResultSet rs = stmt.executeQuery()) {
+	            if (rs.next()) {
+	                return rs.getInt("id"); // Retorna o ID da reserva
+	            }
+	        }
+	    } catch (SQLException e) {
+	        throw new SQLException("Erro ao verificar reserva aberta", e);
+	    }
+
+	    return null; // Retorna null se não encontrar reserva aberta
+	}
+	
+	public List<Reserva> buscarReservasPendentes(int livroId) throws SQLException {
+	    String sql = "SELECT * FROM Reserva WHERE livro_id = ? AND dataExpiracao >= ? ORDER BY dataExpiracao ASC";
+
+	    List<Reserva> reservasPendentes = new ArrayList<>();
+	    
+	    try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	        pstmt.setInt(1, livroId);  // ID do livro
+	        pstmt.setDate(2, Date.valueOf(LocalDate.now()));  // Data atual
+
+	        try (ResultSet rs = pstmt.executeQuery()) {
+	            while (rs.next()) {
+	                // Construa a reserva a partir do resultado
+	                int reservaId = rs.getInt("id");
+	                int usuarioId = rs.getInt("usuario_id");
+	                LocalDate dataReserva = rs.getDate("dataReserva").toLocalDate();
+	                LocalDate dataExpiracao = rs.getDate("dataExpiracao").toLocalDate();
+
+	                // Recupera o livro e o usuário para a reserva
+	                Livro livro = buscarLivroPorId(livroId);
+	                Usuario usuario = buscarUsuarioPorId(usuarioId);
+
+	                Reserva reserva = new Reserva(reservaId, livro, usuario, dataReserva, dataExpiracao);
+	                reservasPendentes.add(reserva);
+	            }
+	        }
+	    } catch (SQLException e) {
+	        logger.error("Erro ao buscar reservas para o livro ID {}: {}", livroId, e.getMessage(), e);
+	        throw new SQLException("Erro ao buscar reservas.", e);
+	    }
+
+	    return reservasPendentes;  // Retorna todas as reservas pendentes
+	}
+
 
 }

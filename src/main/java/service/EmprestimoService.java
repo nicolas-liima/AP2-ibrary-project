@@ -151,39 +151,43 @@ public class EmprestimoService {
 	}
 
 	public void devolverEmprestimo(int emprestimoId) throws SQLException {
-		// Busca o empréstimo pelo ID
-		Emprestimo emprestimo = dataRetriever.buscarEmprestimoPorId(emprestimoId);
-		if (emprestimo == null) {
-			throw new RecursoNaoEncontradoException("Empréstimo não encontrado.");
-		}
+	    // Busca o empréstimo pelo ID
+	    Emprestimo emprestimo = dataRetriever.buscarEmprestimoPorId(emprestimoId);
+	    if (emprestimo == null) {
+	        throw new RecursoNaoEncontradoException("Empréstimo não encontrado.");
+	    }
 
-		// Verifica se o empréstimo já foi devolvido
-		if (emprestimo.getDataDevolucaoEfetiva() != null) {
-			throw new IllegalStateException("Este empréstimo já foi devolvido.");
-		}
+	    // Verifica se o empréstimo já foi devolvido
+	    if (emprestimo.getDataDevolucaoEfetiva() != null) {
+	        throw new IllegalStateException("Este empréstimo já foi devolvido.");
+	    }
 
-		// Recupera o livro associado ao empréstimo
-		Livro livro = emprestimo.getLivro();
+	    // Recupera o livro associado ao empréstimo
+	    Livro livro = emprestimo.getLivro();
 
-		// Adiciona uma unidade ao estoque do livro
-		livro.aumentarEstoque();
-		boolean estoqueAtualizado = dataInserter.atualizarLivro(livro.getIsbn(), livro);
-		if (!estoqueAtualizado) {
-			throw new SQLException("Falha ao atualizar o estoque do livro.");
-		}
+	    // Aumenta o estoque do livro ao ser devolvido
+	    livro.aumentarEstoque();  // Aumenta o estoque do livro
 
-		// Define a data de devolução efetiva para a data atual
+	    // Atualiza o livro no banco de dados através do livroService
+	    boolean estoqueAtualizado = livroService.atualizarLivro(livro.getIsbn(), livro);
+	    if (!estoqueAtualizado) {
+	        throw new SQLException("Falha ao atualizar o estoque do livro.");
+	    }
 
-		emprestimo.setDataDevolucaoEfetiva(LocalDate.now());
+	    // Define a data de devolução efetiva para a data atual
+	    emprestimo.setDataDevolucaoEfetiva(LocalDate.now());
 
-		// Atualiza o empréstimo no banco de dados
-		boolean emprestimoAtualizado = dataInserter.devolverEmprestimo(emprestimo);
-		if (!emprestimoAtualizado) {
-			throw new SQLException("Falha ao atualizar o empréstimo.");
-		}
+	    // Atualiza o empréstimo no banco de dados
+	    boolean emprestimoAtualizado = dataInserter.devolverEmprestimo(emprestimo);
+	    if (!emprestimoAtualizado) {
+	        throw new SQLException("Falha ao atualizar o empréstimo.");
+	    }
 
-		logger.info("Empréstimo devolvido com sucesso. ID: {}", emprestimoId);
+	    logger.info("Empréstimo devolvido com sucesso. ID: {}", emprestimoId);
 	}
+
+
+
 
 	public boolean removerEmprestimo(int id) {
 		Emprestimo emprestimo = buscarEmprestimoPorId(id);
