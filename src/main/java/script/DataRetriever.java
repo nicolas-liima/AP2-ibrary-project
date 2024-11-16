@@ -28,7 +28,7 @@ public class DataRetriever {
     		"u.id AS usuarioId, u.username AS usuarioUsername, u.nome AS usuarioNome, u.email AS usuarioEmail, " +
 		    "u.endereco AS usuarioEndereco, u.telefone AS usuarioTelefone, u.usuarioAtivo as userAtivo, " +
 		    "l.id AS livroId, l.titulo AS livroTitulo, l.isbn AS livroIsbn,l.quantidadeEstoque AS livroQuantidade , " +
-		    "l.categoria AS livroCategoria, l.autor AS livroAutor " +
+		    "l.categoria AS livroCategoria, l.autor AS livroAutor, l.capa as livroCapa " +
     		"FROM Reserva r " +
 		    "JOIN Livro l ON r.livro_id = l.id " +
     		"JOIN Usuario u ON r.usuario_id = u.id ";
@@ -36,7 +36,7 @@ public class DataRetriever {
 		    "u.id AS usuarioId, u.username AS usuarioUsername, u.nome AS usuarioNome, u.email AS usuarioEmail, " +
 		    "u.endereco AS usuarioEndereco, u.telefone AS usuarioTelefone, u.usuarioAtivo as userAtivo, " +
 		    "l.id AS livroId, l.titulo AS livroTitulo, l.isbn AS livroIsbn,l.quantidadeEstoque AS livroQuantidade , " +
-		    "l.categoria AS livroCategoria, l.autor AS livroAutor " +
+		    "l.categoria AS livroCategoria, l.autor AS livroAutor, l.capa AS livroCapa " +
 		    "FROM Emprestimo e " +
 		    "JOIN Usuario u ON e.usuario_id = u.id " +
 		    "JOIN Livro l ON e.livro_id = l.id ";
@@ -201,7 +201,8 @@ public class DataRetriever {
 	                    rs.getString("livroAutor"),
 	                    rs.getString("livroCategoria"),
 	                    rs.getInt("livroQuantidade"),
-	                    rs.getString("livroIsbn")
+	                    rs.getString("livroIsbn"),
+	                    rs.getString("LivroCapa")
 	                );
 
 	            return new Emprestimo(
@@ -382,7 +383,8 @@ public class DataRetriever {
 	                    rs.getString("livroAutor"),
 	                    rs.getString("livroCategoria"),
 	                    rs.getInt("livroQuantidade"),
-	                    rs.getString("livroIsbn")
+	                    rs.getString("livroIsbn"),
+	                    rs.getString("capa")
 	                );
 	            
 	            Usuario usuario = new Usuario(
@@ -473,7 +475,8 @@ public class DataRetriever {
 		String categoria = rs.getString("categoria");
 		int quantidadeEstoque = rs.getInt("quantidadeEstoque");
 		String isbn = rs.getString("isbn");
-		return new Livro(id, titulo, autor, categoria, quantidadeEstoque, isbn);
+		String capa = rs.getString("capa");
+		return new Livro(id, titulo, autor, categoria, quantidadeEstoque, isbn, capa);
 	}
 
 	private Usuario criarUsuario(ResultSet rs) throws SQLException {

@@ -32,7 +32,7 @@ public class DataInserter {
 
 	// Método para inserir um único livro
 	public boolean inserirLivro(Livro livro) {
-		String sql = "INSERT INTO Livro (titulo, autor, categoria, quantidadeEstoque, isbn) VALUES (?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO Livro (titulo, autor, categoria, quantidadeEstoque, isbn, capa) VALUES (?, ?, ?, ?, ?, ?)";
 
 		try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -41,6 +41,7 @@ public class DataInserter {
 			pstmt.setString(3, livro.getCategoria());
 			pstmt.setInt(4, livro.getQuantidadeEstoque());
 			pstmt.setString(5, livro.getIsbn());
+			pstmt.setString(6, livro.getCapa());
 
 			pstmt.executeUpdate();
 			logger.info("Livro inserido com sucesso: {}", livro.getTitulo());
@@ -54,7 +55,7 @@ public class DataInserter {
 
 	// Método para atualizar um livro existente
 	public boolean atualizarLivro(String isbnAntigo, Livro livroAtualizado) {
-	    String sql = "UPDATE Livro SET titulo = ?, autor = ?, categoria = ?, quantidadeEstoque = ?, isbn = ? WHERE isbn = ?";
+	    String sql = "UPDATE Livro SET titulo = ?, autor = ?, categoria = ?, quantidadeEstoque = ?, isbn = ?, capa = ? WHERE isbn = ?";
 
 	    try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -63,7 +64,8 @@ public class DataInserter {
 	        pstmt.setString(3, livroAtualizado.getCategoria());
 	        pstmt.setInt(4, livroAtualizado.getQuantidadeEstoque());
 	        pstmt.setString(5, livroAtualizado.getIsbn());  // Novo ISBN do corpo
-	        pstmt.setString(6, isbnAntigo);                 // ISBN original da URL
+	        pstmt.setString(6, livroAtualizado.getCapa());
+	        pstmt.setString(7, isbnAntigo);                 // ISBN original da URL
 
 	        int rowsUpdated = pstmt.executeUpdate();
 	        if (rowsUpdated > 0) {
