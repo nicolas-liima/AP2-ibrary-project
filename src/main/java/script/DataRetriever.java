@@ -28,15 +28,15 @@ public class DataRetriever {
     		"u.id AS usuarioId, u.username AS usuarioUsername, u.nome AS usuarioNome, u.email AS usuarioEmail, " +
 		    "u.endereco AS usuarioEndereco, u.telefone AS usuarioTelefone, u.usuarioAtivo as userAtivo, " +
 		    "l.id AS livroId, l.titulo AS livroTitulo, l.isbn AS livroIsbn,l.quantidadeEstoque AS livroQuantidade , " +
-		    "l.categoria AS livroCategoria, l.autor AS livroAutor, l.capa as livroCapa " +
+		    "l.categoria AS livroCategoria, l.autor AS livroAutor, l.capa as livroCapa, l.livroFisico, l.livroDigital, l.quantidadeDownloads " +
     		"FROM Reserva r " +
 		    "JOIN Livro l ON r.livro_id = l.id " +
     		"JOIN Usuario u ON r.usuario_id = u.id ";
-	private static final String SELECT_EMPRESTIMO ="SELECT e.id AS emprestimoId, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, " +
+	private static final String SELECT_EMPRESTIMO ="SELECT e.id AS emprestimoId, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, e.emprestimoFisico, e.emprestimoDigital, " +
 		    "u.id AS usuarioId, u.username AS usuarioUsername, u.nome AS usuarioNome, u.email AS usuarioEmail, " +
 		    "u.endereco AS usuarioEndereco, u.telefone AS usuarioTelefone, u.usuarioAtivo as userAtivo, " +
 		    "l.id AS livroId, l.titulo AS livroTitulo, l.isbn AS livroIsbn,l.quantidadeEstoque AS livroQuantidade , " +
-		    "l.categoria AS livroCategoria, l.autor AS livroAutor, l.capa AS livroCapa " +
+		    "l.categoria AS livroCategoria, l.autor AS livroAutor, l.capa AS livroCapa, l.livroFisico, l.livroDigital, l.quantidadeDownloads " +
 		    "FROM Emprestimo e " +
 		    "JOIN Usuario u ON e.usuario_id = u.id " +
 		    "JOIN Livro l ON e.livro_id = l.id ";
@@ -109,21 +109,33 @@ public class DataRetriever {
 	        while (rs.next()) {
 	            // Cria os objetos Usuario e Livro com as informações necessárias
 	            Usuario usuario = new Usuario(
-	                rs.getInt("usuarioId"),
-	                rs.getString("usuarioUsername"),
-	                rs.getString("usuarioNome")
-	                
-	            );
-	            
-	            Livro livro = new Livro(
-	                rs.getInt("livroId"),
-	                rs.getString("livroTitulo")
-	                
-	            );
+		                rs.getInt("usuarioId"),
+		                rs.getString("usuarioUsername"),
+		                rs.getBoolean("userAtivo"),
+		                rs.getString("usuarioNome"),
+		                rs.getString("usuarioEmail"),
+		                rs.getString("usuarioEndereco"),
+		                rs.getString("usuarioTelefone")
+		            );
+
+		            Livro livro = new Livro(
+		                    rs.getInt("livroId"),
+		                    rs.getString("livroTitulo"),
+		                    rs.getString("livroAutor"),
+		                    rs.getString("livroCategoria"),
+		                    rs.getInt("livroQuantidade"),
+		                    rs.getString("livroIsbn"),
+		                    rs.getString("livroCapa"),
+		                    rs.getBoolean("livroFisico"),
+		                    rs.getBoolean("livroDigital"),
+		                    rs.getInt("quantidadeDownloads")
+		                );
 	            LocalDate dataEmprestimo = rs.getDate("dataEmprestimo").toLocalDate();
 	            LocalDate dataDevolucaoPrevista = rs.getDate("dataDevolucaoPrevista").toLocalDate();
 	            LocalDate dataDevolucaoEfetiva = rs.getDate("dataDevolucaoEfetiva") != null ? 
 	                                             rs.getDate("dataDevolucaoEfetiva").toLocalDate() : null;
+	            boolean emprestimoFisico = rs.getBoolean("emprestimoFisico");
+	            boolean emprestimoDigital= rs.getBoolean("emprestimoDigital");
 	      
 	            
 	            // Cria o objeto Emprestimo com os objetos completos de Usuario e Livro
@@ -133,7 +145,9 @@ public class DataRetriever {
 	                    usuario,
 	                    dataEmprestimo,
 	                    dataDevolucaoPrevista,
-	                    dataDevolucaoEfetiva
+	                    dataDevolucaoEfetiva,
+	                    emprestimoFisico,
+	                    emprestimoDigital
 	                );
 	            
 	            emprestimos.add(emprestimo);
@@ -155,20 +169,140 @@ public class DataRetriever {
 	        ResultSet rs = pstmt.executeQuery();
 
 	        while (rs.next()) {
-	            Livro livro = new Livro(rs.getInt("livroId"), rs.getString("livroTitulo"));
-	            Usuario usuario = new Usuario(rs.getInt("usuarioId"), rs.getString("usuarioUsername"), rs.getString("usuarioNome"));
+	            Usuario usuario = new Usuario(
+		                rs.getInt("usuarioId"),
+		                rs.getString("usuarioUsername"),
+		                rs.getBoolean("userAtivo"),
+		                rs.getString("usuarioNome"),
+		                rs.getString("usuarioEmail"),
+		                rs.getString("usuarioEndereco"),
+		                rs.getString("usuarioTelefone")
+		            );
+
+		            Livro livro = new Livro(
+		                    rs.getInt("livroId"),
+		                    rs.getString("livroTitulo"),
+		                    rs.getString("livroAutor"),
+		                    rs.getString("livroCategoria"),
+		                    rs.getInt("livroQuantidade"),
+		                    rs.getString("livroIsbn"),
+		                    rs.getString("livroCapa"),
+		                    rs.getBoolean("livroFisico"),
+		                    rs.getBoolean("livroDigital"),
+		                    rs.getInt("quantidadeDownloads")
+		                );
 	            Emprestimo emprestimo = new Emprestimo(
 	                rs.getInt("emprestimoId"),
 	                livro,
 	                usuario,
 	                rs.getDate("dataEmprestimo").toLocalDate(),
 	                rs.getDate("dataDevolucaoPrevista").toLocalDate(),
-	                rs.getDate("dataDevolucaoEfetiva") != null ? rs.getDate("dataDevolucaoEfetiva").toLocalDate() : null
+	                rs.getDate("dataDevolucaoEfetiva") != null ? rs.getDate("dataDevolucaoEfetiva").toLocalDate() : null,
+	                rs.getBoolean("emprestimoFisico"),
+	                rs.getBoolean("emprestimoDigital")
 	            );
 	            emprestimos.add(emprestimo);
 	        }
 	    } catch (SQLException e) {
 	        logger.error("Erro ao buscar empréstimos para o usuário {}: {}", username, e.getMessage(), e);
+	    }
+
+	    return emprestimos;
+	}
+	
+	public List<Emprestimo> listarEmprestimosFisico() {
+	    List<Emprestimo> emprestimos = new ArrayList<>();
+	    String sql = SELECT_EMPRESTIMO + "WHERE emprestimoFisico = 1"; 
+
+	    try (Connection conn = databaseManager.getConnection();
+	         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	        ResultSet rs = pstmt.executeQuery();
+	        while (rs.next()) {
+	            Usuario usuario = new Usuario(
+		                rs.getInt("usuarioId"),
+		                rs.getString("usuarioUsername"),
+		                rs.getBoolean("userAtivo"),
+		                rs.getString("usuarioNome"),
+		                rs.getString("usuarioEmail"),
+		                rs.getString("usuarioEndereco"),
+		                rs.getString("usuarioTelefone")
+		            );
+
+		            Livro livro = new Livro(
+		                    rs.getInt("livroId"),
+		                    rs.getString("livroTitulo"),
+		                    rs.getString("livroAutor"),
+		                    rs.getString("livroCategoria"),
+		                    rs.getInt("livroQuantidade"),
+		                    rs.getString("livroIsbn"),
+		                    rs.getString("livroCapa"),
+		                    rs.getBoolean("livroFisico"),
+		                    rs.getBoolean("livroDigital"),
+		                    rs.getInt("quantidadeDownloads")
+		                );
+	            Emprestimo emprestimo = new Emprestimo(
+	                rs.getInt("emprestimoId"),
+	                livro,
+	                usuario,
+	                rs.getDate("dataEmprestimo").toLocalDate(),
+	                rs.getDate("dataDevolucaoPrevista").toLocalDate(),
+	                rs.getDate("dataDevolucaoEfetiva") != null ? rs.getDate("dataDevolucaoEfetiva").toLocalDate() : null,
+	                rs.getBoolean("emprestimoFisico"),
+	                rs.getBoolean("emprestimoDigital")
+	            );
+	            emprestimos.add(emprestimo);
+	        }
+	    } catch (SQLException e) {
+	        logger.error("Erro ao buscar empréstimos de livros físicos", e.getMessage(), e);
+	    }
+
+	    return emprestimos;
+	}
+	
+	public List<Emprestimo> listarEmprestimosDigital() {
+	    List<Emprestimo> emprestimos = new ArrayList<>();
+	    String sql = SELECT_EMPRESTIMO + "WHERE emprestimoDigital = 1"; 
+
+	    try (Connection conn = databaseManager.getConnection();
+	         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	        ResultSet rs = pstmt.executeQuery();
+	        while (rs.next()) {
+	            Usuario usuario = new Usuario(
+		                rs.getInt("usuarioId"),
+		                rs.getString("usuarioUsername"),
+		                rs.getBoolean("userAtivo"),
+		                rs.getString("usuarioNome"),
+		                rs.getString("usuarioEmail"),
+		                rs.getString("usuarioEndereco"),
+		                rs.getString("usuarioTelefone")
+		            );
+
+		            Livro livro = new Livro(
+		                    rs.getInt("livroId"),
+		                    rs.getString("livroTitulo"),
+		                    rs.getString("livroAutor"),
+		                    rs.getString("livroCategoria"),
+		                    rs.getInt("livroQuantidade"),
+		                    rs.getString("livroIsbn"),
+		                    rs.getString("livroCapa"),
+		                    rs.getBoolean("livroFisico"),
+		                    rs.getBoolean("livroDigital"),
+		                    rs.getInt("quantidadeDownloads")
+		                );
+	            Emprestimo emprestimo = new Emprestimo(
+	                rs.getInt("emprestimoId"),
+	                livro,
+	                usuario,
+	                rs.getDate("dataEmprestimo").toLocalDate(),
+	                rs.getDate("dataDevolucaoPrevista").toLocalDate(),
+	                rs.getDate("dataDevolucaoEfetiva") != null ? rs.getDate("dataDevolucaoEfetiva").toLocalDate() : null,
+	                rs.getBoolean("emprestimoFisico"),
+	                rs.getBoolean("emprestimoDigital")
+	            );
+	            emprestimos.add(emprestimo);
+	        }
+	    } catch (SQLException e) {
+	        logger.error("Erro ao buscar empréstimos de livros físicos", e.getMessage(), e);
 	    }
 
 	    return emprestimos;
@@ -202,7 +336,10 @@ public class DataRetriever {
 	                    rs.getString("livroCategoria"),
 	                    rs.getInt("livroQuantidade"),
 	                    rs.getString("livroIsbn"),
-	                    rs.getString("LivroCapa")
+	                    rs.getString("livroCapa"),
+	                    rs.getBoolean("livroFisico"),
+	                    rs.getBoolean("livroDigital"),
+	                    rs.getInt("quantidadeDownloads")
 	                );
 
 	            return new Emprestimo(
@@ -211,7 +348,9 @@ public class DataRetriever {
 	                usuario,
 	                rs.getDate("dataEmprestimo").toLocalDate(),
 	                rs.getDate("dataDevolucaoPrevista").toLocalDate(),
-	                rs.getDate("dataDevolucaoEfetiva") != null ? rs.getDate("dataDevolucaoEfetiva").toLocalDate() : null
+	                rs.getDate("dataDevolucaoEfetiva") != null ? rs.getDate("dataDevolucaoEfetiva").toLocalDate() : null,
+	                rs.getBoolean("emprestimoFisico"),
+	                rs.getBoolean("emprestimoDigital")
 	            );
 	            
 	        }
@@ -222,29 +361,45 @@ public class DataRetriever {
 	    return null; // Retorna null se o empréstimo não for encontrado
 	}
 	
-	public List<Emprestimo> listarEmprestimosAtrasados() throws SQLException {
+	public List<Emprestimo> listarEmprestimosAtrasados() {
 		List<Emprestimo> emprestimos = new ArrayList<>();
-	    String sql = "SELECT e.id AS emprestimoId, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, " +
-	                 "u.id AS usuarioId, u.username AS usuarioUsername, u.nome AS usuarioNome, " +
-	                 "l.id AS livroId, l.titulo AS livroTitulo " +
-	                 "FROM Emprestimo e " +
-	                 "JOIN Usuario u ON e.usuario_id = u.id " +
-	                 "JOIN Livro l ON e.livro_id = l.id " +
+	    String sql = SELECT_EMPRESTIMO +
 	                 "WHERE e.dataDevolucaoPrevista < CAST(GETDATE() AS DATE) AND e.dataDevolucaoEfetiva IS NULL";
 	    
 	    try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 	        ResultSet rs = pstmt.executeQuery();
 	        
 	        while (rs.next()) {
-	            Livro livro = new Livro(rs.getInt("livroId"), rs.getString("livroTitulo"));
-	            Usuario usuario = new Usuario(rs.getInt("usuarioId"), rs.getString("usuarioUsername"), rs.getString("usuarioNome"));
-	            Emprestimo emprestimo = new Emprestimo(
+	            Usuario usuario = new Usuario(
+		                rs.getInt("usuarioId"),
+		                rs.getString("usuarioUsername"),
+		                rs.getBoolean("userAtivo"),
+		                rs.getString("usuarioNome"),
+		                rs.getString("usuarioEmail"),
+		                rs.getString("usuarioEndereco"),
+		                rs.getString("usuarioTelefone")
+		            );
+
+		            Livro livro = new Livro(
+		                    rs.getInt("livroId"),
+		                    rs.getString("livroTitulo"),
+		                    rs.getString("livroAutor"),
+		                    rs.getString("livroCategoria"),
+		                    rs.getInt("livroQuantidade"),
+		                    rs.getString("livroIsbn"),
+		                    rs.getString("livroCapa"),
+		                    rs.getBoolean("livroFisico"),
+		                    rs.getBoolean("livroDigital"),
+		                    rs.getInt("quantidadeDownloads")
+		                );	            Emprestimo emprestimo = new Emprestimo(
 	                rs.getInt("emprestimoId"),
 	                livro,
 	                usuario,
 	                rs.getDate("dataEmprestimo").toLocalDate(),
 	                rs.getDate("dataDevolucaoPrevista").toLocalDate(),
-	                rs.getDate("dataDevolucaoEfetiva") != null ? rs.getDate("dataDevolucaoEfetiva").toLocalDate() : null
+	                rs.getDate("dataDevolucaoEfetiva") != null ? rs.getDate("dataDevolucaoEfetiva").toLocalDate() : null,
+	                rs.getBoolean("emprestimoFisico"),
+	                rs.getBoolean("emprestimoDigital")
 	            );
 	            emprestimos.add(emprestimo);
 	    }
@@ -257,12 +412,7 @@ public class DataRetriever {
 	
 	public List<Emprestimo> listarEmprestimosAtivos() throws SQLException {
 	    List<Emprestimo> emprestimos = new ArrayList<>();
-	    String sql = "SELECT e.id AS emprestimoId, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, " +
-	                 "u.id AS usuarioId, u.username AS usuarioUsername, u.nome AS usuarioNome, " +
-	                 "l.id AS livroId, l.titulo AS livroTitulo " +
-	                 "FROM Emprestimo e " +
-	                 "JOIN Usuario u ON e.usuario_id = u.id " +
-	                 "JOIN Livro l ON e.livro_id = l.id " +
+	    String sql = SELECT_EMPRESTIMO +
 	                 "WHERE e.dataDevolucaoEfetiva IS NULL";
 	    
 	    
@@ -270,15 +420,37 @@ public class DataRetriever {
 	        ResultSet rs = pstmt.executeQuery();
 	        
 	        while (rs.next()) {
-	            Livro livro = new Livro(rs.getInt("livroId"), rs.getString("livroTitulo"));
-	            Usuario usuario = new Usuario(rs.getInt("usuarioId"), rs.getString("usuarioUsername"), rs.getString("usuarioNome"));
-	            Emprestimo emprestimo = new Emprestimo(
-	                rs.getInt("emprestimoId"),
-	                livro,
-	                usuario,
-	                rs.getDate("dataEmprestimo").toLocalDate(),
-	                rs.getDate("dataDevolucaoPrevista").toLocalDate(),
-	                rs.getDate("dataDevolucaoEfetiva") != null ? rs.getDate("dataDevolucaoEfetiva").toLocalDate() : null
+	            Usuario usuario = new Usuario(
+		                rs.getInt("usuarioId"),
+		                rs.getString("usuarioUsername"),
+		                rs.getBoolean("userAtivo"),
+		                rs.getString("usuarioNome"),
+		                rs.getString("usuarioEmail"),
+		                rs.getString("usuarioEndereco"),
+		                rs.getString("usuarioTelefone")
+		            );
+
+		            Livro livro = new Livro(
+		                    rs.getInt("livroId"),
+		                    rs.getString("livroTitulo"),
+		                    rs.getString("livroAutor"),
+		                    rs.getString("livroCategoria"),
+		                    rs.getInt("livroQuantidade"),
+		                    rs.getString("livroIsbn"),
+		                    rs.getString("livroCapa"),
+		                    rs.getBoolean("livroFisico"),
+		                    rs.getBoolean("livroDigital"),
+		                    rs.getInt("quantidadeDownloads")
+		                );
+		            Emprestimo emprestimo = new Emprestimo(
+		                rs.getInt("emprestimoId"),
+		                livro,
+		                usuario,
+		                rs.getDate("dataEmprestimo").toLocalDate(),
+		                rs.getDate("dataDevolucaoPrevista").toLocalDate(),
+		                rs.getDate("dataDevolucaoEfetiva") != null ? rs.getDate("dataDevolucaoEfetiva").toLocalDate() : null,
+		                rs.getBoolean("emprestimoFisico"),
+		                rs.getBoolean("emprestimoDigital")
 	            );
 	            emprestimos.add(emprestimo);
 	    }
@@ -291,12 +463,7 @@ public class DataRetriever {
 	
 	public List<Emprestimo> listarEmprestimosFinalizados() throws SQLException {
 	    List<Emprestimo> emprestimos = new ArrayList<>();
-	    String sql = "SELECT e.id AS emprestimoId, e.dataEmprestimo, e.dataDevolucaoPrevista, e.dataDevolucaoEfetiva, " +
-	                 "u.id AS usuarioId, u.username AS usuarioUsername, u.nome AS usuarioNome, " +
-	                 "l.id AS livroId, l.titulo AS livroTitulo " +
-	                 "FROM Emprestimo e " +
-	                 "JOIN Usuario u ON e.usuario_id = u.id " +
-	                 "JOIN Livro l ON e.livro_id = l.id " +
+	    String sql = SELECT_EMPRESTIMO +
 	                 "WHERE e.dataDevolucaoEfetiva IS NOT NULL";
 	    
 	    
@@ -304,15 +471,37 @@ public class DataRetriever {
 	        ResultSet rs = pstmt.executeQuery();
 	        
 	        while (rs.next()) {
-	            Livro livro = new Livro(rs.getInt("livroId"), rs.getString("livroTitulo"));
-	            Usuario usuario = new Usuario(rs.getInt("usuarioId"), rs.getString("usuarioUsername"), rs.getString("usuarioNome"));
-	            Emprestimo emprestimo = new Emprestimo(
-	                rs.getInt("emprestimoId"),
-	                livro,
-	                usuario,
-	                rs.getDate("dataEmprestimo").toLocalDate(),
-	                rs.getDate("dataDevolucaoPrevista").toLocalDate(),
-	                rs.getDate("dataDevolucaoEfetiva").toLocalDate()
+	            Usuario usuario = new Usuario(
+		                rs.getInt("usuarioId"),
+		                rs.getString("usuarioUsername"),
+		                rs.getBoolean("userAtivo"),
+		                rs.getString("usuarioNome"),
+		                rs.getString("usuarioEmail"),
+		                rs.getString("usuarioEndereco"),
+		                rs.getString("usuarioTelefone")
+		            );
+
+		        Livro livro = new Livro(
+		                    rs.getInt("livroId"),
+		                    rs.getString("livroTitulo"),
+		                    rs.getString("livroAutor"),
+		                    rs.getString("livroCategoria"),
+		                    rs.getInt("livroQuantidade"),
+		                    rs.getString("livroIsbn"),
+		                    rs.getString("livroCapa"),
+		                    rs.getBoolean("livroFisico"),
+		                    rs.getBoolean("livroDigital"),
+		                    rs.getInt("quantidadeDownloads")
+		         );
+		         Emprestimo emprestimo = new Emprestimo(
+		                rs.getInt("emprestimoId"),
+		                livro,
+		                usuario,
+		                rs.getDate("dataEmprestimo").toLocalDate(),
+		                rs.getDate("dataDevolucaoPrevista").toLocalDate(),
+		                rs.getDate("dataDevolucaoEfetiva").toLocalDate(),
+		                rs.getBoolean("emprestimoFisico"),
+		                rs.getBoolean("emprestimoDigital")
 	            );
 	            emprestimos.add(emprestimo);
 	    }
@@ -335,15 +524,25 @@ public class DataRetriever {
 	            Usuario usuario = new Usuario(
 		                rs.getInt("usuarioId"),
 		                rs.getString("usuarioUsername"),
-		                rs.getString("usuarioNome")
-		                
+		                rs.getBoolean("userAtivo"),
+		                rs.getString("usuarioNome"),
+		                rs.getString("usuarioEmail"),
+		                rs.getString("usuarioEndereco"),
+		                rs.getString("usuarioTelefone")
 		            );
-		            
+
 		            Livro livro = new Livro(
-		                rs.getInt("livroId"),
-		                rs.getString("livroTitulo")
-		                
-		            );
+		                    rs.getInt("livroId"),
+		                    rs.getString("livroTitulo"),
+		                    rs.getString("livroAutor"),
+		                    rs.getString("livroCategoria"),
+		                    rs.getInt("livroQuantidade"),
+		                    rs.getString("livroIsbn"),
+		                    rs.getString("livroCapa"),
+		                    rs.getBoolean("livroFisico"),
+		                    rs.getBoolean("livroDigital"),
+		                    rs.getInt("quantidadeDownloads")
+		                );
 	            // Conversão das datas e outros campos
 	            LocalDate dataSolicitacao = rs.getDate("dataReserva").toLocalDate();
 	            LocalDate dataRetirada = rs.getDate("dataExpiracao") != null ? rs.getDate("dataExpiracao").toLocalDate() : null;
@@ -384,7 +583,10 @@ public class DataRetriever {
 	                    rs.getString("livroCategoria"),
 	                    rs.getInt("livroQuantidade"),
 	                    rs.getString("livroIsbn"),
-	                    rs.getString("capa")
+	                    rs.getString("capa"),
+	                    rs.getBoolean("livroDigital"),
+	                    rs.getBoolean("livroFisico"),
+	                    rs.getInt("quantidadeDownloads")
 	                );
 	            
 	            Usuario usuario = new Usuario(
@@ -422,8 +624,28 @@ public class DataRetriever {
 	        ResultSet rs = pstmt.executeQuery();	
 
 	        while (rs.next()) {
-	            Livro livro = new Livro(rs.getInt("livroId"), rs.getString("livroTitulo"));
-	            Usuario usuario = new Usuario(rs.getInt("usuarioId"), rs.getString("usuarioUsername"), rs.getString("usuarioNome"));
+	            Usuario usuario = new Usuario(
+		                rs.getInt("usuarioId"),
+		                rs.getString("usuarioUsername"),
+		                rs.getBoolean("userAtivo"),
+		                rs.getString("usuarioNome"),
+		                rs.getString("usuarioEmail"),
+		                rs.getString("usuarioEndereco"),
+		                rs.getString("usuarioTelefone")
+		            );
+
+		            Livro livro = new Livro(
+		                    rs.getInt("livroId"),
+		                    rs.getString("livroTitulo"),
+		                    rs.getString("livroAutor"),
+		                    rs.getString("livroCategoria"),
+		                    rs.getInt("livroQuantidade"),
+		                    rs.getString("livroIsbn"),
+		                    rs.getString("livroCapa"),
+		                    rs.getBoolean("livroFisico"),
+		                    rs.getBoolean("livroDigital"),
+		                    rs.getInt("quantidadeDownloads")
+		                );
 	            Reserva reserva = new Reserva(
 		                rs.getInt("reservaId"),
 		                livro,
@@ -450,8 +672,28 @@ public class DataRetriever {
 	        ResultSet rs = pstmt.executeQuery();
 
 	        while (rs.next()) {
-	            Livro livro = new Livro(rs.getInt("livroId"), rs.getString("livroTitulo"));
-	            Usuario usuario = new Usuario(rs.getInt("usuarioId"), rs.getString("usuarioUsername"), rs.getString("usuarioNome"));
+	            Usuario usuario = new Usuario(
+		                rs.getInt("usuarioId"),
+		                rs.getString("usuarioUsername"),
+		                rs.getBoolean("userAtivo"),
+		                rs.getString("usuarioNome"),
+		                rs.getString("usuarioEmail"),
+		                rs.getString("usuarioEndereco"),
+		                rs.getString("usuarioTelefone")
+		            );
+
+		            Livro livro = new Livro(
+		                    rs.getInt("livroId"),
+		                    rs.getString("livroTitulo"),
+		                    rs.getString("livroAutor"),
+		                    rs.getString("livroCategoria"),
+		                    rs.getInt("livroQuantidade"),
+		                    rs.getString("livroIsbn"),
+		                    rs.getString("livroCapa"),
+		                    rs.getBoolean("livroFisico"),
+		                    rs.getBoolean("livroDigital"),
+		                    rs.getInt("quantidadeDownloads")
+		                );
 	            Reserva reserva = new Reserva(
 		                rs.getInt("reservaId"),
 		                livro,
@@ -476,7 +718,11 @@ public class DataRetriever {
 		int quantidadeEstoque = rs.getInt("quantidadeEstoque");
 		String isbn = rs.getString("isbn");
 		String capa = rs.getString("capa");
-		return new Livro(id, titulo, autor, categoria, quantidadeEstoque, isbn, capa);
+		boolean livroFisico = rs.getBoolean("livroFisico");
+		boolean livroDigital = rs.getBoolean("livroDigital");
+		int quantidadeDownloads = rs.getInt("quantidadeDownloads");	
+		
+		return new Livro(id, titulo, autor, categoria, quantidadeEstoque, isbn, capa, livroFisico, livroDigital, quantidadeDownloads);
 	}
 
 	private Usuario criarUsuario(ResultSet rs) throws SQLException {
@@ -588,36 +834,6 @@ public class DataRetriever {
 }
 
 
-	public List<LocalDate> verificarDisponibilidade(int livroId) {
-    Livro livro = buscarLivroPorId(livroId); // Método que busca o livro pelo ID
-    List<LocalDate> datasDisponiveis = new ArrayList<>();
-
-    if (livro.getQuantidadeEstoque() > 0) {
-        // Se o livro está em estoque, retorna as próximas 5 datas a partir de hoje
-        LocalDate hoje = LocalDate.now();
-        for (int i = 0; i < 5; i++) {
-            datasDisponiveis.add(hoje.plusDays(i)); // Adiciona as próximas 5 datas
-        }
-        return datasDisponiveis;
-    } else {
-        // Se não há estoque, verifica a data de devolução mais próxima dos empréstimos
-        List<Emprestimo> emprestimosAtivos = listarEmprestimosAtivosPorLivro(livroId); // Método que busca empréstimos ativos para o livro
-        if (!emprestimosAtivos.isEmpty()) {
-            for (Emprestimo emprestimo : emprestimosAtivos) {
-                LocalDate dataDevolucao = emprestimo.getDataDevolucaoPrevista();
-                if (!datasDisponiveis.contains(dataDevolucao)) {
-                    datasDisponiveis.add(dataDevolucao);
-                }
-            }
-            // Ordena as datas de devolução e retorna as 5 mais próximas
-            datasDisponiveis.sort(LocalDate::compareTo);
-            return datasDisponiveis.size() > 5 ? datasDisponiveis.subList(0, 5) : datasDisponiveis;
-        }
-    }
-    return datasDisponiveis; // Retorna a lista vazia se não houver datas
-}
-
-
 	public Integer verificarEmprestimoAberto(int usuarioId, int livroId) {
     try (Connection conn = databaseManager.getConnection(); 
          PreparedStatement pstmt = conn.prepareStatement(SELECT_EMPRESTIMO_ABERTO)) {
@@ -636,6 +852,28 @@ public class DataRetriever {
     }
     return null; // Nenhum empréstimo em aberto encontrado
 }
+	
+	public Integer verificarEmprestimoDigital(int usuarioId, int livroId) {
+		String sql = "SELECT * FROM Emprestimo WHERE usuario_id = ? AND livro_id = ? AND emprestimoDigital = 1";
+	    try (Connection conn = databaseManager.getConnection(); 
+	         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	        
+	        pstmt.setInt(1, usuarioId);  // Passa o ID do cliente
+	        pstmt.setInt(2, livroId);    // Passa o ID do livro
+	        
+	        ResultSet rs = pstmt.executeQuery();
+	        if (rs.next()) {
+	            // Se a consulta retornar algum resultado, significa que o empréstimo está em aberto
+	            logger.info("Empréstimo para livro digital ja realizado: Cliente ID = {}, Livro ID = {}", usuarioId, livroId);
+	            return rs.getInt("id"); 
+	        }
+	    } catch (SQLException e) {
+	        logger.error("Erro ao verificar empréstimo em aberto: {}", e.getMessage(), e);
+	    }
+	    return null; // Nenhum empréstimo em aberto encontrado
+	}
+	
+	
 
 	public Integer verificarReservaAberta(int usuarioId, int livroId) throws SQLException {
 	    String sql = "SELECT id FROM reserva WHERE usuario_id = ? AND livro_id = ?";

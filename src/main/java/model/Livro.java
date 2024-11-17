@@ -22,9 +22,15 @@ public class Livro {
     private String isbn;
     
     private String capa;
+    
+    private boolean livroFisico;
+    
+    private boolean livroDigital;
+    
+    private int quantidadeDownloads;
 
     // Construtor completo com ID
-    public Livro(int id, String titulo, String autor, String categoria, int quantidadeEstoque, String isbn, String capa) {
+    public Livro(int id, String titulo, String autor, String categoria, int quantidadeEstoque, String isbn, String capa, boolean livroFisico, boolean livroDigital, int quantidadeDownloads) {
         this.id = id;
         this.titulo = titulo;
         this.autor = autor;
@@ -32,11 +38,16 @@ public class Livro {
         this.quantidadeEstoque = quantidadeEstoque;
         this.isbn = isbn;
         this.capa = capa;
+        this.livroFisico = livroFisico;
+        this.livroDigital = livroDigital;
+        this.quantidadeDownloads = quantidadeDownloads;
     }
+    
     public Livro(String titulo,String isbn) {
         this.titulo = titulo;
         this.isbn = isbn;
     }
+    
     public Livro(String titulo,String isbn, int quantidadeEstoque) {
         this.titulo = titulo;
         this.isbn = isbn;
@@ -45,22 +56,28 @@ public class Livro {
     
 
     // Construtor sem ID
-    public Livro(String titulo, String autor, String categoria, int quantidadeEstoque, String isbn, String capa) {
+    public Livro(String titulo, String autor, String categoria, int quantidadeEstoque, String isbn, String capa,  boolean livroFisico, boolean livroDigital, int quantidadeDownloads) {
         this.titulo = titulo;
         this.autor = autor;
         this.categoria = categoria;
         this.quantidadeEstoque = quantidadeEstoque;
         this.isbn = isbn;
         this.capa = capa;
+        this.livroFisico = livroFisico;
+        this.livroDigital = livroDigital;
+        this.quantidadeDownloads = quantidadeDownloads;
     }
     
-    public Livro(int id, String titulo, String autor, String categoria, String isbn, String capa) {
+    public Livro(int id, String titulo, String autor, String categoria, String isbn, String capa,  boolean livroFisico, boolean livroDigital, int quantidadeDownloads) {
         this.id = id;
         this.titulo = titulo;
         this.autor = autor;
         this.categoria = categoria;
         this.isbn = isbn;
         this.capa = capa;
+        this.livroFisico = livroFisico;
+        this.livroDigital = livroDigital;
+        this.quantidadeDownloads = quantidadeDownloads;
     }
     
     
@@ -128,6 +145,27 @@ public class Livro {
     public void setCapa(String capa) {
         this.capa = capa;
     }
+    
+    public int getQuantidadeDownloads() {
+        return quantidadeDownloads;
+    }
+    
+    public boolean isLivroFisico() {
+        return livroFisico;
+    }
+    
+    public boolean isLivroDigital() {
+        return livroDigital;
+    }
+    
+    public void setLivroFisico(boolean livroFisico) {
+        this.livroFisico = livroFisico;
+    }
+    
+    public void setLivroDigital(boolean livroDigital) {
+        this.livroDigital = livroDigital;
+    }
+
 
     // Verifica se o livro está disponível para empréstimo
     public boolean isDisponivelParaEmprestimo() {
@@ -152,6 +190,10 @@ public class Livro {
         if (this.quantidadeEstoque < 0) {
             this.quantidadeEstoque = 0;
         }
+    }
+    
+    public void acrescentarDownload(int quantidade) {
+    	this.quantidadeDownloads += quantidade;
     }
 
     @Override

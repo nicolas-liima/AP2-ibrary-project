@@ -32,7 +32,7 @@ public class DataInserter {
 
 	// Método para inserir um único livro
 	public boolean inserirLivro(Livro livro) {
-		String sql = "INSERT INTO Livro (titulo, autor, categoria, quantidadeEstoque, isbn, capa) VALUES (?, ?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO Livro (titulo, autor, categoria, quantidadeEstoque, isbn, capa, livroFisico, livroDigital, quantidadeDownloads) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 		try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -41,8 +41,10 @@ public class DataInserter {
 			pstmt.setString(3, livro.getCategoria());
 			pstmt.setInt(4, livro.getQuantidadeEstoque());
 			pstmt.setString(5, livro.getIsbn());
-			pstmt.setString(6, livro.getCapa());
-
+	        pstmt.setString(6, livro.getCapa());
+	        pstmt.setBoolean(7, livro.isLivroFisico());
+	        pstmt.setBoolean(8, livro.isLivroDigital());
+	        pstmt.setInt(9, livro.getQuantidadeDownloads());
 			pstmt.executeUpdate();
 			logger.info("Livro inserido com sucesso: {}", livro.getTitulo());
 			return true;
@@ -55,7 +57,7 @@ public class DataInserter {
 
 	// Método para atualizar um livro existente
 	public boolean atualizarLivro(String isbnAntigo, Livro livroAtualizado) {
-	    String sql = "UPDATE Livro SET titulo = ?, autor = ?, categoria = ?, quantidadeEstoque = ?, isbn = ?, capa = ? WHERE isbn = ?";
+	    String sql = "UPDATE Livro SET titulo = ?, autor = ?, categoria = ?, quantidadeEstoque = ?, isbn = ?, capa = ?, livroFisico = ?, livroDigital = ?, quantidadeDownloads = ? WHERE isbn = ?";
 
 	    try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -65,7 +67,10 @@ public class DataInserter {
 	        pstmt.setInt(4, livroAtualizado.getQuantidadeEstoque());
 	        pstmt.setString(5, livroAtualizado.getIsbn());  // Novo ISBN do corpo
 	        pstmt.setString(6, livroAtualizado.getCapa());
-	        pstmt.setString(7, isbnAntigo);                 // ISBN original da URL
+	        pstmt.setBoolean(7, livroAtualizado.isLivroFisico());
+	        pstmt.setBoolean(8, livroAtualizado.isLivroDigital());
+	        pstmt.setInt(9, livroAtualizado.getQuantidadeDownloads());
+	        pstmt.setString(10, isbnAntigo);                 // ISBN original da URL
 
 	        int rowsUpdated = pstmt.executeUpdate();
 	        if (rowsUpdated > 0) {
@@ -193,7 +198,7 @@ public class DataInserter {
 	}
 
 	public boolean inserirEmprestimo(Emprestimo emprestimo) {
-	    String sql = "INSERT INTO Emprestimo (livro_id, usuario_id, dataEmprestimo, dataDevolucaoPrevista) VALUES (?, ?, ?, ?)";
+	    String sql = "INSERT INTO Emprestimo (livro_id, usuario_id, dataEmprestimo, dataDevolucaoPrevista, dataDevolucaoEfetiva, emprestimoFisico, emprestimoDigital) VALUES (?, ?, ?, ?, ?, ?, ?)";
 	    try (Connection conn = databaseManager.getConnection(); 
 	         PreparedStatement pstmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
@@ -202,6 +207,16 @@ public class DataInserter {
 	        pstmt.setInt(2, emprestimo.getUsuario().getId()); // usuario_id
 	        pstmt.setDate(3, java.sql.Date.valueOf(emprestimo.getDataEmprestimo())); // dataEmprestimo
 	        pstmt.setDate(4, java.sql.Date.valueOf(emprestimo.getDataDevolucaoPrevista())); // dataDevolucaoPrevista
+
+	        // Verifica se a data de devolução efetiva foi definida
+	        if (emprestimo.getDataDevolucaoEfetiva() != null) {
+	            pstmt.setDate(5, java.sql.Date.valueOf(emprestimo.getDataDevolucaoEfetiva())); // dataDevolucaoEfetiva
+	        } else {
+	            pstmt.setNull(5, java.sql.Types.DATE); // Define como NULL se não for digital
+	        }
+
+	        pstmt.setBoolean(6, emprestimo.isEmprestimoFisico()); // emprestimoFisico
+	        pstmt.setBoolean(7, emprestimo.isEmprestimoDigital()); 
 
 	        // Executa a inserção
 	        // Executa a inserção

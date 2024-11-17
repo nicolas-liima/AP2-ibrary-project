@@ -22,23 +22,38 @@ public class Emprestimo {
     private LocalDate dataEmprestimo;
     private LocalDate dataDevolucaoPrevista;
     private LocalDate dataDevolucaoEfetiva;
+    
+    private boolean emprestimoFisico;
+    private boolean emprestimoDigital;
 
     // Construtor padrão exigido pelo JPA
     protected Emprestimo() {
     }
 
     // Construtor para novo empréstimo (sem data de devolução efetiva)
-    public Emprestimo(Livro livro, Usuario usuario, LocalDate dataEmprestimo, LocalDate dataDevolucaoPrevista) {
+    public Emprestimo(Livro livro, Usuario usuario, LocalDate dataEmprestimo, LocalDate dataDevolucaoPrevista,boolean emprestimoFisico, boolean emprestimoDigital) {
         validarDatas(dataEmprestimo, dataDevolucaoPrevista);
         this.livro = livro;
         this.usuario = usuario;
         this.dataEmprestimo = dataEmprestimo;
         this.dataDevolucaoPrevista = dataDevolucaoPrevista;
         this.dataDevolucaoEfetiva = null; // Não devolvido inicialmente
+        this.emprestimoFisico = emprestimoFisico;
+        this.emprestimoDigital = emprestimoDigital;
+    }
+    public Emprestimo(Livro livro, Usuario usuario, LocalDate dataEmprestimo, LocalDate dataDevolucaoPrevista, LocalDate dataDevolucaoEfetiva, boolean emprestimoFisico, boolean emprestimoDigital) {
+        validarDatas(dataEmprestimo, dataDevolucaoPrevista);
+        this.livro = livro;
+        this.usuario = usuario;
+        this.dataEmprestimo = dataEmprestimo;
+        this.dataDevolucaoPrevista = dataDevolucaoPrevista;
+        this.dataDevolucaoEfetiva = dataDevolucaoEfetiva;
+        this.emprestimoFisico = emprestimoFisico;
+        this.emprestimoDigital = emprestimoDigital;
     }
 
     // Construtor completo para consulta de empréstimos
-    public Emprestimo(int id, Livro livro, Usuario usuario, LocalDate dataEmprestimo, LocalDate dataDevolucaoPrevista, LocalDate dataDevolucaoEfetiva) {
+    public Emprestimo(int id, Livro livro, Usuario usuario, LocalDate dataEmprestimo, LocalDate dataDevolucaoPrevista, LocalDate dataDevolucaoEfetiva, boolean emprestimoFisico, boolean emprestimoDigital) {
         validarDatas(dataEmprestimo, dataDevolucaoPrevista);
         this.id = id;
         this.livro = livro;
@@ -46,6 +61,8 @@ public class Emprestimo {
         this.dataEmprestimo = dataEmprestimo;
         this.dataDevolucaoPrevista = dataDevolucaoPrevista;
         this.dataDevolucaoEfetiva = dataDevolucaoEfetiva;
+        this.emprestimoFisico = emprestimoFisico;
+        this.emprestimoDigital = emprestimoDigital;
     }
     
 
@@ -78,7 +95,21 @@ public class Emprestimo {
     public LocalDate getDataDevolucaoEfetiva() {
         return dataDevolucaoEfetiva;
     }
-   
+    public boolean isEmprestimoFisico() {
+        return emprestimoFisico;
+    }
+    
+    public void setEmprestimoFisico(boolean emprestimoFisico) {
+        this.emprestimoFisico = emprestimoFisico;
+    }
+    
+    public boolean isEmprestimoDigital() {
+        return emprestimoDigital;
+    }
+    
+    public void setEmprestimoDigital(boolean emprestimoDigital) {
+        this.emprestimoDigital = emprestimoDigital;
+    }
     public void setDataDevolucaoEfetiva(LocalDate dataDevolucaoEfetiva) {
 		this.dataDevolucaoEfetiva = dataDevolucaoEfetiva;
 	}

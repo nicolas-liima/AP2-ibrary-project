@@ -178,7 +178,7 @@ public class ReservaService {
         deletarReserva(reservaId);
 
         // Realiza o empréstimo (transformando a reserva em empréstimo)
-        int emprestimoId = emprestimoService.realizarEmprestimo(reserva.getLivro().getIsbn(), reserva.getUsuario().getUsername());
+        int emprestimoId = emprestimoService.realizarEmprestimoFisico(reserva.getLivro().getIsbn(), reserva.getUsuario().getUsername());
         return emprestimoId;
     }
     

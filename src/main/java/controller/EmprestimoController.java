@@ -37,11 +37,30 @@ public class EmprestimoController {
     }
 
     
-    @PostMapping("/realizar")
+    @PostMapping("/realizar/fisico")
     public ResponseEntity<?> realizarEmprestimo(@RequestParam String isbn, @RequestParam String username) {
         try {
             logger.info("Recebendo requisição para realizar empréstimo: ISBN={}, Username={}", isbn, username);
-            int novoEmprestimoID = emprestimoService.realizarEmprestimo(isbn, username);
+            int novoEmprestimoID = emprestimoService.realizarEmprestimoFisico(isbn, username);
+            logger.info("Empréstimo realizado com sucesso. ID do Empréstimo: {}", novoEmprestimoID);
+            return ResponseEntity.ok("Emprestimo realizado com o Id:"+ novoEmprestimoID);
+        } catch (ObjetoDuplicadoException e) {
+            logger.warn("Falha ao realizar empréstimo: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (RecursoNaoEncontradoException e) {
+            logger.warn("Recurso não encontrado: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao realizar empréstimo: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao processar a solicitação.");
+        }
+    }
+    
+    @PostMapping("/realizar/digital")
+    public ResponseEntity<?> realizarDigital(@RequestParam String isbn, @RequestParam String username) {
+        try {
+            logger.info("Recebendo requisição para realizar empréstimo: ISBN={}, Username={}", isbn, username);
+            int novoEmprestimoID = emprestimoService.realizarEmprestimoDigital(isbn, username);
             logger.info("Empréstimo realizado com sucesso. ID do Empréstimo: {}", novoEmprestimoID);
             return ResponseEntity.ok("Emprestimo realizado com o Id:"+ novoEmprestimoID);
         } catch (ObjetoDuplicadoException e) {
@@ -103,6 +122,39 @@ public class EmprestimoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null); // Retorna 500 para erros inesperados
         }
     }
+    
+    @GetMapping("/fisico")
+    public ResponseEntity<List<Emprestimo>> listarEmprestimosFisico() {
+        try {
+        	List<Emprestimo> emprestimos = emprestimoService.listarEmprestimosFisico();
+            if (emprestimos == null) {
+                throw new RecursoNaoEncontradoException("Nenhum empréstimo encontrado");
+            }
+            return ResponseEntity.ok(emprestimos);
+        } catch (RecursoNaoEncontradoException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Retorna 404 se o recurso não for encontrado
+        } catch (Exception e) {
+            logger.error("Erro ao listar empréstimos de livros físicos", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null); // Retorna 500 para erros inesperados
+        }
+    }
+    
+    @GetMapping("/digital")
+    public ResponseEntity<List<Emprestimo>> listarEmprestimosDigital() {
+        try {
+        	List<Emprestimo> emprestimos = emprestimoService.listarEmprestimosDigital();
+            if (emprestimos == null) {
+                throw new RecursoNaoEncontradoException("Nenhum empréstimo encontrado");
+            }
+            return ResponseEntity.ok(emprestimos);
+        } catch (RecursoNaoEncontradoException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Retorna 404 se o recurso não for encontrado
+        } catch (Exception e) {
+            logger.error("Erro ao listar empréstimos de livros físicos", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null); // Retorna 500 para erros inesperados
+        }
+    }
+    
     
     @GetMapping("/atrasados")
     public ResponseEntity<?> listarEmprestimosAtrasados() {

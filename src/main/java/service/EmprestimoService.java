@@ -35,61 +35,111 @@ public class EmprestimoService {
 		this.livroService = livroService;
 	}
 
-	public int realizarEmprestimo(String isbn, String username) throws SQLException {
-		// Verifica a existência do usuário e se ele está ativo
-		Usuario usuario = usuarioService.buscarUsuarioPorUsername(username);
-		if (usuario == null || !usuario.isUsuarioAtivo()) {
-			throw new RecursoNaoEncontradoException("Usuário não encontrado ou inativo.");
-		}
+	public int realizarEmprestimoFisico(String isbn, String username) throws SQLException {
+	    // Verifica a existência do usuário e se ele está ativo
+	    Usuario usuario = usuarioService.buscarUsuarioPorUsername(username);
+	    if (usuario == null || !usuario.isUsuarioAtivo()) {
+	        throw new RecursoNaoEncontradoException("Usuário não encontrado ou inativo.");
+	    }
 
-		// Verifica a existência do livro
-		Livro livro = livroService.buscarLivroPorISBN(isbn);
-		if (livro == null) {
-			throw new RecursoNaoEncontradoException("Livro não encontrado.");
-		}
+	    // Verifica a existência do livro e se ele está disponível na versão física
+	    Livro livro = livroService.buscarLivroPorISBN(isbn);
+	    if (livro == null || !livro.isLivroFisico()) {
+	        throw new RecursoNaoEncontradoException("Livro físico não encontrado.");
+	    }
 
-		// Verifica se o livro está disponível para empréstimo
-		if (!livro.isDisponivelParaEmprestimo()) {
-			throw new ObjetoDuplicadoException("Livro indisponível no estoque.");
-		}
+	    // Verifica se o livro está disponível no estoque
+	    if (!livro.isDisponivelParaEmprestimo()) {
+	        throw new ObjetoDuplicadoException("Livro físico indisponível no estoque.");
+	    }
 
-		// Verifica se o usuário já possui um empréstimo em aberto para o mesmo livro
-		Integer emprestimoAberto = dataRetriever.verificarEmprestimoAberto(usuario.getId(), livro.getId());
-		if (emprestimoAberto != null) {
-			throw new ObjetoDuplicadoException("Usuário já possui um empréstimo em aberto para este livro.");
-		}
+	    // Verifica se o usuário já possui um empréstimo em aberto para o mesmo livro físico
+	    Integer emprestimoAberto = dataRetriever.verificarEmprestimoAberto(usuario.getId(), livro.getId()); // true para físico
+	    if (emprestimoAberto != null) {
+	        throw new ObjetoDuplicadoException(
+	                String.format("Usuário já possui um empréstimo em aberto para este livro físico. ID do empréstimo: %d", emprestimoAberto)
+	            );   
+	        }
 
-		// Calcula a data de devolução prevista (14 dias após o empréstimo)
-		LocalDate dataEmprestimo = LocalDate.now();
-		LocalDate dataDevolucaoPrevista = dataEmprestimo.plusDays(14);
+	    // Calcula a data de devolução prevista (14 dias após o empréstimo)
+	    LocalDate dataEmprestimo = LocalDate.now();
+	    LocalDate dataDevolucaoPrevista = dataEmprestimo.plusDays(14);
 
-		// Reduz o estoque do livro
-		livro.reduzirEstoque();
-		boolean estoqueAtualizado = dataInserter.atualizarLivro(isbn, livro);
-		if (!estoqueAtualizado) {
-			throw new SQLException("Falha ao atualizar o estoque do livro.");
-		}
+	    // Reduz o estoque do livro
+	    livro.reduzirEstoque();
+	    boolean estoqueAtualizado = dataInserter.atualizarLivro(isbn, livro);
+	    if (!estoqueAtualizado) {
+	        throw new SQLException("Falha ao atualizar o estoque do livro.");
+	    }
 
-		// Cria o empréstimo com a data de devolução prevista
-		Emprestimo novoEmprestimo = new Emprestimo(livro, usuario, dataEmprestimo, dataDevolucaoPrevista);
-		boolean sucesso = dataInserter.inserirEmprestimo(novoEmprestimo);
-		if (sucesso) {
-			logger.info("Empréstimo criado com sucesso.");
-		} else {
-			throw new SQLException("Falha ao realizar o empréstimo.");
-		}
+	    // Cria o empréstimo físico
+	    Emprestimo novoEmprestimo = new Emprestimo(livro, usuario, dataEmprestimo, dataDevolucaoPrevista, true, false);
+	    boolean sucesso = dataInserter.inserirEmprestimo(novoEmprestimo);
+	    if (!sucesso) {
+	        throw new SQLException("Falha ao realizar o empréstimo físico.");
+	    }
 
-		// Busca o ID correto do empréstimo inserido
-		Integer novoEmprestimoID = dataRetriever.verificarEmprestimoAberto(usuario.getId(), livro.getId());
-		if (novoEmprestimoID == null) {
-			throw new SQLException("Não foi possível encontrar o empréstimo após a inserção.");
-		}
+	    // Busca o ID correto do empréstimo inserido
+	    Integer novoEmprestimoID = dataRetriever.verificarEmprestimoAberto(usuario.getId(), livro.getId());
+	    if (novoEmprestimoID == null) {
+	        throw new SQLException("Não foi possível encontrar o empréstimo após a inserção.");
+	    }
 
-		logger.info("Empréstimo criado com sucesso. ID: {}", novoEmprestimoID);
-
-		// Retorna o ID do novo empréstimo, após a execução completa
-		return novoEmprestimoID;
+	    logger.info("Empréstimo físico criado com sucesso. ID: {}", novoEmprestimoID);
+	    return novoEmprestimoID;
 	}
+	
+	public int realizarEmprestimoDigital(String isbn, String username) throws SQLException {
+	    // Verifica a existência do usuário e se ele está ativo
+	    Usuario usuario = usuarioService.buscarUsuarioPorUsername(username);
+	    if (usuario == null || !usuario.isUsuarioAtivo()) {
+	        throw new RecursoNaoEncontradoException("Usuário não encontrado ou inativo.");
+	    }
+
+	    // Verifica a existência do livro e se ele está disponível na versão digital
+	    Livro livro = livroService.buscarLivroPorISBN(isbn);
+	    if (livro == null || !livro.isLivroDigital()) {
+	        throw new RecursoNaoEncontradoException("Livro digital não encontrado.");
+	    }
+
+	    // Verifica se o usuário já possui um empréstimo do mesmo livro digital
+	    Integer emprestimoExistente = dataRetriever.verificarEmprestimoDigital(usuario.getId(), livro.getId()); // false para digital
+	    if (emprestimoExistente != null) {
+	        throw new ObjetoDuplicadoException(
+	                String.format("Usuário já possui um empréstimo para este livro digital. ID do empréstimo: %d", emprestimoExistente)
+	            );
+	        }
+
+	    // Define a data de empréstimo e devolução efetiva (mesmo dia para fins de relatório)
+	    LocalDate dataEmprestimo = LocalDate.now();
+	    LocalDate dataDevolucaoPrevista = dataEmprestimo;
+	    LocalDate dataDevolucaoEfetiva = dataEmprestimo;
+
+	    // Incrementa a quantidade de downloads do livro digital
+	    livro.acrescentarDownload(1);
+	    boolean livroAtualizado = dataInserter.atualizarLivro(isbn, livro);
+	    if (!livroAtualizado) {
+	        throw new SQLException("Falha ao atualizar o registro do livro digital.");
+	    }
+
+	    // Cria o empréstimo digital
+	    Emprestimo novoEmprestimo = new Emprestimo(livro, usuario, dataEmprestimo, dataDevolucaoPrevista,dataDevolucaoEfetiva, false, true);
+	    boolean sucesso = dataInserter.inserirEmprestimo(novoEmprestimo);
+	    if (!sucesso) {
+	        throw new SQLException("Falha ao realizar o empréstimo digital.");
+	    }
+
+	    // Busca o ID correto do empréstimo inserido
+	    Integer novoEmprestimoID = dataRetriever.verificarEmprestimoDigital(usuario.getId(), livro.getId());
+	    if (novoEmprestimoID == null) {
+	        throw new SQLException("Não foi possível encontrar o empréstimo digital após a inserção.");
+	    }
+
+	    logger.info("Empréstimo digital criado com sucesso. ID: {}", novoEmprestimoID);
+	    return novoEmprestimoID;
+	}
+
+
 
 	public List<Emprestimo> listarTodosEmprestimos() {
 		// Chama o DataRetriever para buscar todos os empréstimos
@@ -130,8 +180,8 @@ public class EmprestimoService {
 		return emprestimos;
 	}
 
-	public List<Emprestimo> listarEmprestimosAtivos() throws SQLException {
-		List<Emprestimo> emprestimos = dataRetriever.listarEmprestimosAtivos();
+	public List<Emprestimo> listarEmprestimosDigital() throws SQLException {
+		List<Emprestimo> emprestimos = dataRetriever.listarEmprestimosDigital();
 
 		if (emprestimos == null || emprestimos.isEmpty()) {
 			throw new RecursoNaoEncontradoException("Nenhum empréstimo encontrado.");
@@ -150,6 +200,25 @@ public class EmprestimoService {
 		return emprestimos;
 	}
 
+	public List<Emprestimo> listarEmprestimosFisico() throws SQLException {
+		List<Emprestimo> emprestimos = dataRetriever.listarEmprestimosFisico();
+
+		if (emprestimos == null || emprestimos.isEmpty()) {
+			throw new RecursoNaoEncontradoException("Nenhum empréstimo encontrado.");
+		}
+
+		return emprestimos;
+	}
+
+	public List<Emprestimo> listarEmprestimosAtivos() throws SQLException {
+		List<Emprestimo> emprestimos = dataRetriever.listarEmprestimosAtivos();
+
+		if (emprestimos == null || emprestimos.isEmpty()) {
+			throw new RecursoNaoEncontradoException("Nenhum empréstimo encontrado.");
+		}
+
+		return emprestimos;
+	}
 	public void devolverEmprestimo(int emprestimoId) throws SQLException {
 	    // Busca o empréstimo pelo ID
 	    Emprestimo emprestimo = dataRetriever.buscarEmprestimoPorId(emprestimoId);
