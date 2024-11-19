@@ -32,7 +32,7 @@ public class DataInserter {
 
 	// Método para inserir um único livro
 	public boolean inserirLivro(Livro livro) {
-		String sql = "INSERT INTO Livro (titulo, autor, categoria, quantidadeEstoque, isbn, capa, livroFisico, livroDigital, quantidadeDownloads) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO Livro (titulo, autor, categoria, quantidadeEstoque, isbn, capa, livroFisico, livroDigital, quantidadeLicencas, descricao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 		try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -44,7 +44,8 @@ public class DataInserter {
 	        pstmt.setString(6, livro.getCapa());
 	        pstmt.setBoolean(7, livro.isLivroFisico());
 	        pstmt.setBoolean(8, livro.isLivroDigital());
-	        pstmt.setInt(9, livro.getQuantidadeDownloads());
+	        pstmt.setInt(9, livro.getQuantidadeLicencas());
+	        pstmt.setString(10, livro.getDescricao());
 			pstmt.executeUpdate();
 			logger.info("Livro inserido com sucesso: {}", livro.getTitulo());
 			return true;
@@ -57,7 +58,7 @@ public class DataInserter {
 
 	// Método para atualizar um livro existente
 	public boolean atualizarLivro(String isbnAntigo, Livro livroAtualizado) {
-	    String sql = "UPDATE Livro SET titulo = ?, autor = ?, categoria = ?, quantidadeEstoque = ?, isbn = ?, capa = ?, livroFisico = ?, livroDigital = ?, quantidadeDownloads = ? WHERE isbn = ?";
+	    String sql = "UPDATE Livro SET titulo = ?, autor = ?, categoria = ?, quantidadeEstoque = ?, isbn = ?, capa = ?, livroFisico = ?, livroDigital = ?, quantidadeLicencas = ?, descricao = ? WHERE isbn = ?";
 
 	    try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -69,8 +70,9 @@ public class DataInserter {
 	        pstmt.setString(6, livroAtualizado.getCapa());
 	        pstmt.setBoolean(7, livroAtualizado.isLivroFisico());
 	        pstmt.setBoolean(8, livroAtualizado.isLivroDigital());
-	        pstmt.setInt(9, livroAtualizado.getQuantidadeDownloads());
-	        pstmt.setString(10, isbnAntigo);                 // ISBN original da URL
+	        pstmt.setInt(9, livroAtualizado.getQuantidadeLicencas());
+	        pstmt.setString(10, livroAtualizado.getDescricao());
+	        pstmt.setString(11, isbnAntigo);                 // ISBN original da URL
 
 	        int rowsUpdated = pstmt.executeUpdate();
 	        if (rowsUpdated > 0) {

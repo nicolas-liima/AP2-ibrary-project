@@ -95,50 +95,53 @@ public class EmprestimoService {
 	    if (usuario == null || !usuario.isUsuarioAtivo()) {
 	        throw new RecursoNaoEncontradoException("Usuário não encontrado ou inativo.");
 	    }
-
+	
 	    // Verifica a existência do livro e se ele está disponível na versão digital
 	    Livro livro = livroService.buscarLivroPorISBN(isbn);
 	    if (livro == null || !livro.isLivroDigital()) {
 	        throw new RecursoNaoEncontradoException("Livro digital não encontrado.");
 	    }
-
+	
+	    // Verifica a quantidade de licenças disponíveis
+	    if (livro.getQuantidadeLicencas() <= 0) {
+	        throw new ObjetoDuplicadoException("Não há licenças disponíveis para o empréstimo deste livro digital.");
+	    }
+	
 	    // Verifica se o usuário já possui um empréstimo do mesmo livro digital
-	    Integer emprestimoExistente = dataRetriever.verificarEmprestimoDigital(usuario.getId(), livro.getId()); // false para digital
+	    Integer emprestimoExistente = dataRetriever.verificarEmprestimoDigital(usuario.getId(), livro.getId());
 	    if (emprestimoExistente != null) {
 	        throw new ObjetoDuplicadoException(
-	                String.format("Usuário já possui um empréstimo para este livro digital. ID do empréstimo: %d", emprestimoExistente)
-	            );
-	        }
-
+	                String.format("Usuário já possui um empréstimo em aberto para este livro digital. ID do empréstimo: %d", emprestimoExistente)
+	        );
+	    }
+	
 	    // Define a data de empréstimo e devolução efetiva (mesmo dia para fins de relatório)
 	    LocalDate dataEmprestimo = LocalDate.now();
-	    LocalDate dataDevolucaoPrevista = dataEmprestimo;
-	    LocalDate dataDevolucaoEfetiva = dataEmprestimo;
-
-	    // Incrementa a quantidade de downloads do livro digital
-	    livro.acrescentarDownload(1);
+	    LocalDate dataDevolucaoPrevista = dataEmprestimo.plusDays(14);
+	
+	    // Reduz a quantidade de licenças disponíveis
+	    livro.reduzirLicenca();  // Método que decrementa a quantidade de licenças
 	    boolean livroAtualizado = dataInserter.atualizarLivro(isbn, livro);
 	    if (!livroAtualizado) {
 	        throw new SQLException("Falha ao atualizar o registro do livro digital.");
 	    }
-
+	
 	    // Cria o empréstimo digital
-	    Emprestimo novoEmprestimo = new Emprestimo(livro, usuario, dataEmprestimo, dataDevolucaoPrevista,dataDevolucaoEfetiva, false, true);
+	    Emprestimo novoEmprestimo = new Emprestimo(livro, usuario, dataEmprestimo, dataDevolucaoPrevista, false, true);
 	    boolean sucesso = dataInserter.inserirEmprestimo(novoEmprestimo);
 	    if (!sucesso) {
 	        throw new SQLException("Falha ao realizar o empréstimo digital.");
 	    }
-
+	
 	    // Busca o ID correto do empréstimo inserido
 	    Integer novoEmprestimoID = dataRetriever.verificarEmprestimoDigital(usuario.getId(), livro.getId());
 	    if (novoEmprestimoID == null) {
 	        throw new SQLException("Não foi possível encontrar o empréstimo digital após a inserção.");
 	    }
-
+	
 	    logger.info("Empréstimo digital criado com sucesso. ID: {}", novoEmprestimoID);
 	    return novoEmprestimoID;
 	}
-
 
 
 	public List<Emprestimo> listarTodosEmprestimos() {
@@ -254,8 +257,6 @@ public class EmprestimoService {
 
 	    logger.info("Empréstimo devolvido com sucesso. ID: {}", emprestimoId);
 	}
-
-
 
 
 	public boolean removerEmprestimo(int id) {

@@ -28,7 +28,7 @@ public class DataRetriever {
     		"u.id AS usuarioId, u.username AS usuarioUsername, u.nome AS usuarioNome, u.email AS usuarioEmail, " +
 		    "u.endereco AS usuarioEndereco, u.telefone AS usuarioTelefone, u.usuarioAtivo as userAtivo, " +
 		    "l.id AS livroId, l.titulo AS livroTitulo, l.isbn AS livroIsbn,l.quantidadeEstoque AS livroQuantidade , " +
-		    "l.categoria AS livroCategoria, l.autor AS livroAutor, l.capa as livroCapa, l.livroFisico, l.livroDigital, l.quantidadeDownloads " +
+		    "l.categoria AS livroCategoria, l.autor AS livroAutor, l.capa as livroCapa, l.livroFisico, l.livroDigital, l.quantidadeLicencas, l.descricao as livroDescricao  " +
     		"FROM Reserva r " +
 		    "JOIN Livro l ON r.livro_id = l.id " +
     		"JOIN Usuario u ON r.usuario_id = u.id ";
@@ -36,11 +36,11 @@ public class DataRetriever {
 		    "u.id AS usuarioId, u.username AS usuarioUsername, u.nome AS usuarioNome, u.email AS usuarioEmail, " +
 		    "u.endereco AS usuarioEndereco, u.telefone AS usuarioTelefone, u.usuarioAtivo as userAtivo, " +
 		    "l.id AS livroId, l.titulo AS livroTitulo, l.isbn AS livroIsbn,l.quantidadeEstoque AS livroQuantidade , " +
-		    "l.categoria AS livroCategoria, l.autor AS livroAutor, l.capa AS livroCapa, l.livroFisico, l.livroDigital, l.quantidadeDownloads " +
+		    "l.categoria AS livroCategoria, l.autor AS livroAutor, l.capa AS livroCapa, l.livroFisico, l.livroDigital, l.quantidadeLicencas, l.descricao as livroDescricao " +
 		    "FROM Emprestimo e " +
 		    "JOIN Usuario u ON e.usuario_id = u.id " +
 		    "JOIN Livro l ON e.livro_id = l.id ";
-    private static final String SELECT_EMPRESTIMO_ABERTO = "SELECT * FROM Emprestimo WHERE usuario_id = ? AND livro_id = ? AND dataDevolucaoEfetiva IS NULL";
+    private static final String SELECT_EMPRESTIMO_ABERTO = "SELECT * FROM Emprestimo WHERE usuario_id = ? AND livro_id = ? AND dataDevolucaoEfetiva IS NULL AND emprestimoFisico = 1";
 
 	private static final Logger logger = LoggerFactory.getLogger(DataRetriever.class);
 	private DatabaseManager databaseManager;
@@ -128,7 +128,8 @@ public class DataRetriever {
 		                    rs.getString("livroCapa"),
 		                    rs.getBoolean("livroFisico"),
 		                    rs.getBoolean("livroDigital"),
-		                    rs.getInt("quantidadeDownloads")
+		                    rs.getInt("quantidadeLicencas"),
+		                    rs.getString("livroDescricao")
 		                );
 	            LocalDate dataEmprestimo = rs.getDate("dataEmprestimo").toLocalDate();
 	            LocalDate dataDevolucaoPrevista = rs.getDate("dataDevolucaoPrevista").toLocalDate();
@@ -179,18 +180,19 @@ public class DataRetriever {
 		                rs.getString("usuarioTelefone")
 		            );
 
-		            Livro livro = new Livro(
-		                    rs.getInt("livroId"),
-		                    rs.getString("livroTitulo"),
-		                    rs.getString("livroAutor"),
-		                    rs.getString("livroCategoria"),
-		                    rs.getInt("livroQuantidade"),
-		                    rs.getString("livroIsbn"),
-		                    rs.getString("livroCapa"),
-		                    rs.getBoolean("livroFisico"),
-		                    rs.getBoolean("livroDigital"),
-		                    rs.getInt("quantidadeDownloads")
-		                );
+	            Livro livro = new Livro(
+	                    rs.getInt("livroId"),
+	                    rs.getString("livroTitulo"),
+	                    rs.getString("livroAutor"),
+	                    rs.getString("livroCategoria"),
+	                    rs.getInt("livroQuantidade"),
+	                    rs.getString("livroIsbn"),
+	                    rs.getString("livroCapa"),
+	                    rs.getBoolean("livroFisico"),
+	                    rs.getBoolean("livroDigital"),
+	                    rs.getInt("quantidadeLicencas"),
+	                    rs.getString("livroDescricao")
+	                );
 	            Emprestimo emprestimo = new Emprestimo(
 	                rs.getInt("emprestimoId"),
 	                livro,
@@ -228,18 +230,19 @@ public class DataRetriever {
 		                rs.getString("usuarioTelefone")
 		            );
 
-		            Livro livro = new Livro(
-		                    rs.getInt("livroId"),
-		                    rs.getString("livroTitulo"),
-		                    rs.getString("livroAutor"),
-		                    rs.getString("livroCategoria"),
-		                    rs.getInt("livroQuantidade"),
-		                    rs.getString("livroIsbn"),
-		                    rs.getString("livroCapa"),
-		                    rs.getBoolean("livroFisico"),
-		                    rs.getBoolean("livroDigital"),
-		                    rs.getInt("quantidadeDownloads")
-		                );
+	            Livro livro = new Livro(
+	                    rs.getInt("livroId"),
+	                    rs.getString("livroTitulo"),
+	                    rs.getString("livroAutor"),
+	                    rs.getString("livroCategoria"),
+	                    rs.getInt("livroQuantidade"),
+	                    rs.getString("livroIsbn"),
+	                    rs.getString("livroCapa"),
+	                    rs.getBoolean("livroFisico"),
+	                    rs.getBoolean("livroDigital"),
+	                    rs.getInt("quantidadeLicencas"),
+	                    rs.getString("livroDescricao")
+	                );
 	            Emprestimo emprestimo = new Emprestimo(
 	                rs.getInt("emprestimoId"),
 	                livro,
@@ -277,18 +280,19 @@ public class DataRetriever {
 		                rs.getString("usuarioTelefone")
 		            );
 
-		            Livro livro = new Livro(
-		                    rs.getInt("livroId"),
-		                    rs.getString("livroTitulo"),
-		                    rs.getString("livroAutor"),
-		                    rs.getString("livroCategoria"),
-		                    rs.getInt("livroQuantidade"),
-		                    rs.getString("livroIsbn"),
-		                    rs.getString("livroCapa"),
-		                    rs.getBoolean("livroFisico"),
-		                    rs.getBoolean("livroDigital"),
-		                    rs.getInt("quantidadeDownloads")
-		                );
+	            Livro livro = new Livro(
+	                    rs.getInt("livroId"),
+	                    rs.getString("livroTitulo"),
+	                    rs.getString("livroAutor"),
+	                    rs.getString("livroCategoria"),
+	                    rs.getInt("livroQuantidade"),
+	                    rs.getString("livroIsbn"),
+	                    rs.getString("livroCapa"),
+	                    rs.getBoolean("livroFisico"),
+	                    rs.getBoolean("livroDigital"),
+	                    rs.getInt("quantidadeLicencas"),
+	                    rs.getString("livroDescricao")
+	                );
 	            Emprestimo emprestimo = new Emprestimo(
 	                rs.getInt("emprestimoId"),
 	                livro,
@@ -339,7 +343,8 @@ public class DataRetriever {
 	                    rs.getString("livroCapa"),
 	                    rs.getBoolean("livroFisico"),
 	                    rs.getBoolean("livroDigital"),
-	                    rs.getInt("quantidadeDownloads")
+	                    rs.getInt("quantidadeLicencas"),
+	                    rs.getString("livroDescricao")
 	                );
 
 	            return new Emprestimo(
@@ -380,18 +385,20 @@ public class DataRetriever {
 		                rs.getString("usuarioTelefone")
 		            );
 
-		            Livro livro = new Livro(
-		                    rs.getInt("livroId"),
-		                    rs.getString("livroTitulo"),
-		                    rs.getString("livroAutor"),
-		                    rs.getString("livroCategoria"),
-		                    rs.getInt("livroQuantidade"),
-		                    rs.getString("livroIsbn"),
-		                    rs.getString("livroCapa"),
-		                    rs.getBoolean("livroFisico"),
-		                    rs.getBoolean("livroDigital"),
-		                    rs.getInt("quantidadeDownloads")
-		                );	            Emprestimo emprestimo = new Emprestimo(
+	            Livro livro = new Livro(
+	                    rs.getInt("livroId"),
+	                    rs.getString("livroTitulo"),
+	                    rs.getString("livroAutor"),
+	                    rs.getString("livroCategoria"),
+	                    rs.getInt("livroQuantidade"),
+	                    rs.getString("livroIsbn"),
+	                    rs.getString("livroCapa"),
+	                    rs.getBoolean("livroFisico"),
+	                    rs.getBoolean("livroDigital"),
+	                    rs.getInt("quantidadeLicencas"),
+	                    rs.getString("livroDescricao")
+	                );
+	            Emprestimo emprestimo = new Emprestimo(
 	                rs.getInt("emprestimoId"),
 	                livro,
 	                usuario,
@@ -430,18 +437,19 @@ public class DataRetriever {
 		                rs.getString("usuarioTelefone")
 		            );
 
-		            Livro livro = new Livro(
-		                    rs.getInt("livroId"),
-		                    rs.getString("livroTitulo"),
-		                    rs.getString("livroAutor"),
-		                    rs.getString("livroCategoria"),
-		                    rs.getInt("livroQuantidade"),
-		                    rs.getString("livroIsbn"),
-		                    rs.getString("livroCapa"),
-		                    rs.getBoolean("livroFisico"),
-		                    rs.getBoolean("livroDigital"),
-		                    rs.getInt("quantidadeDownloads")
-		                );
+	            Livro livro = new Livro(
+	                    rs.getInt("livroId"),
+	                    rs.getString("livroTitulo"),
+	                    rs.getString("livroAutor"),
+	                    rs.getString("livroCategoria"),
+	                    rs.getInt("livroQuantidade"),
+	                    rs.getString("livroIsbn"),
+	                    rs.getString("livroCapa"),
+	                    rs.getBoolean("livroFisico"),
+	                    rs.getBoolean("livroDigital"),
+	                    rs.getInt("quantidadeLicencas"),
+	                    rs.getString("livroDescricao")
+	                );
 		            Emprestimo emprestimo = new Emprestimo(
 		                rs.getInt("emprestimoId"),
 		                livro,
@@ -481,18 +489,19 @@ public class DataRetriever {
 		                rs.getString("usuarioTelefone")
 		            );
 
-		        Livro livro = new Livro(
-		                    rs.getInt("livroId"),
-		                    rs.getString("livroTitulo"),
-		                    rs.getString("livroAutor"),
-		                    rs.getString("livroCategoria"),
-		                    rs.getInt("livroQuantidade"),
-		                    rs.getString("livroIsbn"),
-		                    rs.getString("livroCapa"),
-		                    rs.getBoolean("livroFisico"),
-		                    rs.getBoolean("livroDigital"),
-		                    rs.getInt("quantidadeDownloads")
-		         );
+	            Livro livro = new Livro(
+	                    rs.getInt("livroId"),
+	                    rs.getString("livroTitulo"),
+	                    rs.getString("livroAutor"),
+	                    rs.getString("livroCategoria"),
+	                    rs.getInt("livroQuantidade"),
+	                    rs.getString("livroIsbn"),
+	                    rs.getString("livroCapa"),
+	                    rs.getBoolean("livroFisico"),
+	                    rs.getBoolean("livroDigital"),
+	                    rs.getInt("quantidadeLicencas"),
+	                    rs.getString("livroDescricao")
+	                );
 		         Emprestimo emprestimo = new Emprestimo(
 		                rs.getInt("emprestimoId"),
 		                livro,
@@ -531,18 +540,19 @@ public class DataRetriever {
 		                rs.getString("usuarioTelefone")
 		            );
 
-		            Livro livro = new Livro(
-		                    rs.getInt("livroId"),
-		                    rs.getString("livroTitulo"),
-		                    rs.getString("livroAutor"),
-		                    rs.getString("livroCategoria"),
-		                    rs.getInt("livroQuantidade"),
-		                    rs.getString("livroIsbn"),
-		                    rs.getString("livroCapa"),
-		                    rs.getBoolean("livroFisico"),
-		                    rs.getBoolean("livroDigital"),
-		                    rs.getInt("quantidadeDownloads")
-		                );
+	            Livro livro = new Livro(
+	                    rs.getInt("livroId"),
+	                    rs.getString("livroTitulo"),
+	                    rs.getString("livroAutor"),
+	                    rs.getString("livroCategoria"),
+	                    rs.getInt("livroQuantidade"),
+	                    rs.getString("livroIsbn"),
+	                    rs.getString("livroCapa"),
+	                    rs.getBoolean("livroFisico"),
+	                    rs.getBoolean("livroDigital"),
+	                    rs.getInt("quantidadeLicencas"),
+	                    rs.getString("livroDescricao")
+	                );
 	            // Conversão das datas e outros campos
 	            LocalDate dataSolicitacao = rs.getDate("dataReserva").toLocalDate();
 	            LocalDate dataRetirada = rs.getDate("dataExpiracao") != null ? rs.getDate("dataExpiracao").toLocalDate() : null;
@@ -576,17 +586,18 @@ public class DataRetriever {
 	        
 	        if (rs.next()) {
 	        	
-	            Livro livro = new Livro(
+	        	Livro livro = new Livro(
 	                    rs.getInt("livroId"),
 	                    rs.getString("livroTitulo"),
 	                    rs.getString("livroAutor"),
 	                    rs.getString("livroCategoria"),
 	                    rs.getInt("livroQuantidade"),
 	                    rs.getString("livroIsbn"),
-	                    rs.getString("capa"),
-	                    rs.getBoolean("livroDigital"),
+	                    rs.getString("livroCapa"),
 	                    rs.getBoolean("livroFisico"),
-	                    rs.getInt("quantidadeDownloads")
+	                    rs.getBoolean("livroDigital"),
+	                    rs.getInt("quantidadeLicencas"),
+	                    rs.getString("livroDescricao")
 	                );
 	            
 	            Usuario usuario = new Usuario(
@@ -634,18 +645,19 @@ public class DataRetriever {
 		                rs.getString("usuarioTelefone")
 		            );
 
-		            Livro livro = new Livro(
-		                    rs.getInt("livroId"),
-		                    rs.getString("livroTitulo"),
-		                    rs.getString("livroAutor"),
-		                    rs.getString("livroCategoria"),
-		                    rs.getInt("livroQuantidade"),
-		                    rs.getString("livroIsbn"),
-		                    rs.getString("livroCapa"),
-		                    rs.getBoolean("livroFisico"),
-		                    rs.getBoolean("livroDigital"),
-		                    rs.getInt("quantidadeDownloads")
-		                );
+	            Livro livro = new Livro(
+	                    rs.getInt("livroId"),
+	                    rs.getString("livroTitulo"),
+	                    rs.getString("livroAutor"),
+	                    rs.getString("livroCategoria"),
+	                    rs.getInt("livroQuantidade"),
+	                    rs.getString("livroIsbn"),
+	                    rs.getString("livroCapa"),
+	                    rs.getBoolean("livroFisico"),
+	                    rs.getBoolean("livroDigital"),
+	                    rs.getInt("quantidadeLicencas"),
+	                    rs.getString("livroDescricao")
+	                );
 	            Reserva reserva = new Reserva(
 		                rs.getInt("reservaId"),
 		                livro,
@@ -682,18 +694,19 @@ public class DataRetriever {
 		                rs.getString("usuarioTelefone")
 		            );
 
-		            Livro livro = new Livro(
-		                    rs.getInt("livroId"),
-		                    rs.getString("livroTitulo"),
-		                    rs.getString("livroAutor"),
-		                    rs.getString("livroCategoria"),
-		                    rs.getInt("livroQuantidade"),
-		                    rs.getString("livroIsbn"),
-		                    rs.getString("livroCapa"),
-		                    rs.getBoolean("livroFisico"),
-		                    rs.getBoolean("livroDigital"),
-		                    rs.getInt("quantidadeDownloads")
-		                );
+	            Livro livro = new Livro(
+	                    rs.getInt("livroId"),
+	                    rs.getString("livroTitulo"),
+	                    rs.getString("livroAutor"),
+	                    rs.getString("livroCategoria"),
+	                    rs.getInt("livroQuantidade"),
+	                    rs.getString("livroIsbn"),
+	                    rs.getString("livroCapa"),
+	                    rs.getBoolean("livroFisico"),
+	                    rs.getBoolean("livroDigital"),
+	                    rs.getInt("quantidadeLicencas"),
+	                    rs.getString("livroDescricao")
+	                );
 	            Reserva reserva = new Reserva(
 		                rs.getInt("reservaId"),
 		                livro,
@@ -720,9 +733,10 @@ public class DataRetriever {
 		String capa = rs.getString("capa");
 		boolean livroFisico = rs.getBoolean("livroFisico");
 		boolean livroDigital = rs.getBoolean("livroDigital");
-		int quantidadeDownloads = rs.getInt("quantidadeDownloads");	
+		int quantidadeLicencas = rs.getInt("quantidadeLicencas");
+		String descricao = rs.getString("descricao");
 		
-		return new Livro(id, titulo, autor, categoria, quantidadeEstoque, isbn, capa, livroFisico, livroDigital, quantidadeDownloads);
+		return new Livro(id, titulo, autor, categoria, quantidadeEstoque, isbn, capa, livroFisico, livroDigital, quantidadeLicencas, descricao);
 	}
 
 	private Usuario criarUsuario(ResultSet rs) throws SQLException {
@@ -854,7 +868,7 @@ public class DataRetriever {
 }
 	
 	public Integer verificarEmprestimoDigital(int usuarioId, int livroId) {
-		String sql = "SELECT * FROM Emprestimo WHERE usuario_id = ? AND livro_id = ? AND emprestimoDigital = 1";
+		String sql = "SELECT * FROM Emprestimo WHERE usuario_id = ? AND livro_id = ? AND emprestimoDigital = 1 AND dataDevolucaoEfetiva IS NULL";
 	    try (Connection conn = databaseManager.getConnection(); 
 	         PreparedStatement pstmt = conn.prepareStatement(sql)) {
 	        
