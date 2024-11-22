@@ -32,7 +32,7 @@ public class DataInserter {
 
 	// Método para inserir um único livro
 	public boolean inserirLivro(Livro livro) {
-		String sql = "INSERT INTO Livro (titulo, autor, categoria, quantidadeEstoque, isbn, capa, livroFisico, livroDigital, quantidadeLicencas, descricao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO Livro (titulo, autor, categoria, quantidadeEstoque, isbn, capa, livroFisico, livroDigital, quantidadeLicencas, descricao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 		try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -277,6 +277,31 @@ public class DataInserter {
 			logger.error("Erro ao remover empréstimo com ID {}: {}", emprestimoId, e.getMessage(), e);
 			return false;
 		}
+	}
+	
+	// Método para excluir todos os empréstimos de mais de um ano atrás
+	public boolean excluirEmprestimosAntigos(int anos) {
+	    String sql = "DELETE FROM Emprestimo WHERE dataDevolucaoEfetiva < ?";
+	    LocalDate umAnoAtras = LocalDate.now().minusYears(anos);
+
+	    try (Connection conn = databaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+	        // Define o parâmetro com a data limite
+	        pstmt.setDate(1, Date.valueOf(umAnoAtras));
+
+	        int rowsDeleted = pstmt.executeUpdate();
+	        if (rowsDeleted > 0) {
+	            logger.info("Empréstimos antigos removidos com sucesso. Total de registros excluídos: {}", rowsDeleted);
+	            return true;
+	        } else {
+	            logger.info("Nenhum empréstimo antigo encontrado para exclusão.");
+	            return false;
+	        }
+
+	    } catch (SQLException e) {
+	        logger.error("Erro ao remover empréstimos antigos: {}", e.getMessage(), e);
+	        return false;
+	    }
 	}
 	
 	// Método para inserir uma nova reserva

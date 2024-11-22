@@ -205,6 +205,35 @@ public class EmprestimoController {
         }
     }
     
+    @DeleteMapping("/anos/{anos}")
+    public ResponseEntity<String> excluirEmprestimosAntigos(@PathVariable int anos) {
+        logger.info("Recebendo requisição para excluir empréstimos com mais de {} anos.", anos);
+
+        if (anos <= 0) {
+            logger.warn("Número de anos inválido: {}. A operação foi rejeitada.", anos);
+            return ResponseEntity.badRequest().body("O número de anos deve ser maior que zero.");
+        }
+
+        try {
+            boolean sucesso = emprestimoService.excluirEmprestimosAntigos(anos);
+
+            if (sucesso) {
+                logger.info("Empréstimos com mais de {} anos foram excluídos com sucesso.", anos);
+                return ResponseEntity.ok(
+                    String.format("Empréstimos com mais de %d anos foram excluídos com sucesso.", anos)
+                );
+            } else {
+                logger.info("Nenhum empréstimo com mais de {} anos foi encontrado para exclusão.", anos);
+                return ResponseEntity.ok(
+                    String.format("Nenhum empréstimo com mais de %d anos foi encontrado para exclusão.", anos)
+                );
+            }
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao excluir empréstimos antigos: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao processar a solicitação.");
+        }
+    }
+
     @PutMapping("/devolver/{id}")
     public ResponseEntity<String> devolverEmprestimo(@PathVariable int id) {
         try {

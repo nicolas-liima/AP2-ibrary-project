@@ -263,5 +263,23 @@ public class EmprestimoService {
 		Emprestimo emprestimo = buscarEmprestimoPorId(id);
 		return dataInserter.removerEmprestimo(emprestimo.getId());
 	}
+	
+	public boolean excluirEmprestimosAntigos(int anos) {
+	    if (anos <= 0) {
+	        throw new IllegalArgumentException("O número de anos deve ser maior que zero.");
+	    }
+
+	    boolean sucesso = dataInserter.excluirEmprestimosAntigos(anos);
+
+	    if (sucesso) {
+	        logger.info("Exclusão de empréstimos antigos realizada com sucesso para registros com mais de {} anos.", anos);
+	    } else {
+	        logger.warn("Nenhum empréstimo antigo foi excluído para registros com mais de {} anos.", anos);
+	    }
+
+	    return sucesso;
+	}
+
+	
 
 }
