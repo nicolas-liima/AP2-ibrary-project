@@ -21,7 +21,7 @@ public class LoginService {
         Usuario usuario = usuarioService.buscarUsuarioPorUsername(username);
         
         if (usuario == null) {
-            throw new RecursoNaoEncontradoException("Usuário não encontrado: " + username);
+            throw new RecursoNaoEncontradoException(username);
         }
         
         if (!usuario.isUsuarioAtivo()) {

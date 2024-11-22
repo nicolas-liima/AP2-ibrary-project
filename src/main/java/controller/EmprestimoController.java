@@ -223,16 +223,16 @@ public class EmprestimoController {
                     String.format("Empréstimos com mais de %d anos foram excluídos com sucesso.", anos)
                 );
             } else {
+                // Retorna 204 (sem conteúdo) caso não haja registros para excluir
                 logger.info("Nenhum empréstimo com mais de {} anos foi encontrado para exclusão.", anos);
-                return ResponseEntity.ok(
-                    String.format("Nenhum empréstimo com mais de %d anos foi encontrado para exclusão.", anos)
-                );
+                return ResponseEntity.noContent().build();
             }
         } catch (Exception e) {
             logger.error("Erro inesperado ao excluir empréstimos antigos: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao processar a solicitação.");
         }
     }
+
 
     @PutMapping("/devolver/{id}")
     public ResponseEntity<String> devolverEmprestimo(@PathVariable int id) {
